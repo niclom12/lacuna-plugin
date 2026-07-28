@@ -226,6 +226,14 @@ class MemoCase(Harness, unittest.TestCase):
         res = self.run_one("13-nonpublic-in-thesis.md")
         self.assertBlocked(res, "C8", "repeated in ## Thesis")
 
+    # 15
+    def test_15_an_estimate_split_across_two_lines_still_blocks(self):
+        """The estimate and the outcome verb sit on separate list items, so wrapped-line
+        merging never joins them. C7 reads the whole paragraph block instead."""
+        res = self.run_one("15-cross-line-estimate.md")
+        self.assertBlocked(res, "C7", "75%")
+        self.assertIn("is missing", " ".join(f["message"] for f in self.blocks(res)))
+
     # 14
     def test_14_third_fire_writes_the_failure_banner_and_stops_blocking(self):
         memo_path, state = self.case("14-third-fire.md")
@@ -324,6 +332,23 @@ class GuardrailCase(Harness, unittest.TestCase):
         self.assertFalse([f for f in res["findings"]
                           if f["check_id"] == "C2" and f["severity"] == "block"])
         self.assertTrue(res["infra_failures"])
+
+    def test_an_unknown_attribution_stamp_is_refused_and_a_version_stamp_is_not(self):
+        stamp_it = lambda v: (lambda t: t.replace("generated_by: lacuna@a1b2c3d",
+                                                  "generated_by: lacuna@" + v, 1))
+        self.assertBlocked(self.run_one("01-clean.md", edit=stamp_it("unknown")),
+                           "C1", "lacuna@unknown")
+        self.assertClean(self.run_one("01-clean.md", edit=stamp_it("v0.1.0")))
+
+    def test_a_symlinked_root_shares_the_attempt_cap_rather_than_resetting_it(self):
+        memo_path, state = self.case("03-fabricated-quote.md")
+        os.symlink(self.tmp, os.path.join(self.tmp, "linked"))
+        via_link = os.path.join(self.tmp, "linked", "memo.md")
+        codes = [verify.run_verify(p, state, CONFIG, FakeNet(), True)["exit_code"]
+                 for p in (memo_path, via_link, via_link)]
+        self.assertEqual(codes, [2, 2, 0], "the link must not hand the memo a fresh attempt count")
+        store = json.loads(read(os.path.join(state, "verified.json")))
+        self.assertEqual(list(store), [os.path.realpath(memo_path)])
 
     def test_a_price_figure_with_no_ledgered_price_retrieval_blocks(self):
         res = self.run_one("01-clean.md", edit=after(

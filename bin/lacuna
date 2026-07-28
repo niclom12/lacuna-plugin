@@ -6,7 +6,7 @@ import argparse, fcntl, hashlib, importlib.util, json, os, re, shlex, ssl, subpr
 import urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-VERSION = "1.0.0"
+VERSION = "0.1.0"
 PREFIX = {3: "DATA UNAVAILABLE:", 4: "RATE LIMITED:", 5: "SETUP REQUIRED:", 6: "NETWORK BLOCKED:", 7: "AMBIGUOUS:"}
 SETUP_LINE = "This needs setup first. Run `/lacuna:setup`, about three minutes."
 ALLOWED_HOSTS = ("sec.gov", "data.sec.gov", "efts.sec.gov", "courtlistener.com", "gdeltproject.org")
@@ -70,14 +70,15 @@ def save_config(cfg):
 def plugin_root(): return Path(__file__).resolve().parent.parent
 _SHA = None
 def plugin_sha():
+    """The git short sha of this tree, or v<release> when there is no checkout to read."""
     global _SHA
     if _SHA is None:
         try:
             out = subprocess.run(["git", "-C", str(plugin_root()), "rev-parse", "--short", "HEAD"],
                                  capture_output=True, text=True, timeout=5)
-            _SHA = out.stdout.strip() or "unknown"
+            _SHA = out.stdout.strip() or "v" + VERSION
         except (OSError, subprocess.SubprocessError):
-            _SHA = "unknown"
+            _SHA = "v" + VERSION
     return _SHA
 def now_iso(): return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 def prog(i, n, msg):
@@ -241,10 +242,8 @@ def cl_auth():
     return {"Authorization": "Token " + token} if token else {}
 class Net:
     """Injected into lacuna_verify.run_verify. Both methods return None on infrastructure failure."""
-
     def __init__(self, case_id="unassigned"):
         self.case_id, self.cache_file = case_id, state_dir() / "cite-cache.json"
-
     @staticmethod
     def norm(cite): return re.sub(r"\s+", " ", (cite or "").strip()).lower()
 
@@ -545,7 +544,8 @@ def report_lines(report, label):
     for line in report.get("infra_failures") or []: sys.stderr.write("WARNING (not a block): %s\n" % line)
     return report.get("findings") or []
 def cmd_verify(a):
-    report = load_verify().run_verify(str(Path(a.file).resolve()), str(state_dir()), config(), Net(a.case_id),
+    # realpath keys verified.json and the pending-quote state, so a symlinked root is not a second memo.
+    report = load_verify().run_verify(os.path.realpath(a.file), str(state_dir()), config(), Net(a.case_id),
                                       not a.explain)
     findings = report_lines(report, a.file)
     if not findings: print("%s: all checks passed" % a.file)   # exit code still comes from the report
@@ -767,13 +767,13 @@ def hook_session_start(payload):
     sha = plugin_sha()
     print('LACUNA BINARY: python3 "%s"\nLACUNA ROOT: %s\nRun every lacuna command with that exact binary '
           "prefix. Never type bare `lacuna`. Templates and reference files live under LACUNA ROOT, and "
-          "`template memo` prints the memo skeleton to stdout.\nToday is %s (UTC).\nlacuna %s at commit %s."
+          "`template memo` prints the memo skeleton to stdout.\nToday is %s (UTC).\nlacuna %s, build %s."
           % (binpath, root, datetime.now(timezone.utc).strftime("%Y-%m-%d"), VERSION, sha))
-    if sha == "unknown":
-        print("WARNING: this install has no git commit, so every memo it produces would be stamped "
-              "`generated_by: lacuna@unknown` and could not be traced back to the guardrails that made it. "
-              "Commit the plugin tree before relying on a memo: git -C %s init && git add -A && git commit "
-              "-m 'lacuna %s'." % (root, VERSION))
+    if sha == "v" + VERSION:
+        print("WARNING: this install has no git commit, so every memo it produces is stamped "
+              "`generated_by: lacuna@v%s`, which names the release but not the exact tree that made it. "
+              "Commit the plugin tree for a traceable stamp: git -C %s init && git add -A && git commit "
+              "-m 'lacuna %s'." % (VERSION, root, VERSION))
     seen = sd / "last-sha"
     try:
         prev = seen.read_text(encoding="utf-8").strip() if seen.exists() else ""
@@ -824,7 +824,7 @@ def hook_stop(payload):
         sys.stderr.write("WARNING (not a block): %s\n" % exc.msg); return 0
     deadline, blocks = time.time() + 90, []
     for path in memo_files(cwd):
-        memo = Path(path)
+        path, memo = os.path.realpath(path), Path(path)
         try: digest = hashlib.sha256(memo.read_bytes()).hexdigest()
         except OSError: continue
         prior = verified.get(path) if isinstance(verified.get(path), dict) else {}

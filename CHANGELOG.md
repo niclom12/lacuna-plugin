@@ -10,6 +10,22 @@ changes, so keep it short and keep it plain.
 
 ## [Unreleased]
 
+### Fixed
+
+- Version reporting, memo attribution, path keying, the confidence check and the eval scorer, from the first review pass.
+- `bin/lacuna` reported `1.0.0` while every manifest said `0.1.0`. Both now read `0.1.0`, in the session banner and in the SEC User-Agent.
+- An install with no git checkout stamped `generated_by: lacuna@unknown`. It now stamps `lacuna@v<release>`, and check C1 refuses `lacuna@unknown` outright while accepting a git sha or a versioned stamp.
+- `verified.json` and the pending-quote state are keyed on the memo's real path, so reaching a project through a symlink no longer hands a failing memo a fresh attempts count.
+- Check C7 reads estimates over whole paragraph blocks. An estimate and its outcome verb split across two list items used to walk past it.
+- `eval/score.sh` derives the ledger path from the memo path, accepts a `LEDGER` override, and marks M7 `UNSCORABLE` with an explicit error when no ledger can be read, instead of reporting a quiet `INCONCLUSIVE`.
+- Setup step 8 pipes the probe citation into `court cite -`. Run with empty stdin the old form printed "no reporter-style citations were found" and exited 0, so a check that verified nothing read as a success.
+
+### Changed
+
+- README and `coverage-limits.md` state what the checks do not catch: the confidence check is a lint over common phrasings, the nonpublic-leak check is defeated by paraphrase, and URL provenance proves the host and the identifier rather than the document path.
+- `eval/RUBRIC.md` and `eval/TASK.md` tell a third-party scorer two concrete ways to locate `score.sh` on a fresh install.
+- `memo-house-style` records that the `[web, verify]` tag applies only to material the main session supplies, since the case-researcher agent has no web tools.
+
 ## [0.1.0] - 2026-07-29
 
 First release: federal docket and SEC filing research with ten deterministic verification checks.

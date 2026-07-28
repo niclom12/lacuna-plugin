@@ -79,7 +79,6 @@ def _allowed(url):
     m = re.match(r"https?://([^/:]+)", url)
     h = re.sub(r"^www\.", "", (m.group(1).lower() if m else ""))
     return any(h == d or h.endswith("." + d) for d in ALLOW_HOSTS)
-
 def _quotes(text):
     """Straight quotes, curly quotes and markdown blockquotes, 6+ tokens."""
     for m in RE_QUOTE.finditer(text):
@@ -109,10 +108,8 @@ def _value(s):
         a, b = WORDVAL.get(m.group(1)) or int(m.group(1)), WORDVAL.get(m.group(2)) or int(m.group(2))
         return a / float(b) if b else None
     except (AttributeError, TypeError, ValueError): return None
-
 class Ctx(object):
     """Memo, ledger and cache parsed once, plus the finding sink."""
-
     def __init__(self, path, raw, state_dir, config, net):
         self.path, self.raw, self.state, self.cfg = path, raw, state_dir, config or {}
         self.net, self.infra, self.findings, self.lines = net, [], [], raw.split("\n")
@@ -136,7 +133,6 @@ class Ctx(object):
         self.ledger = self._ledger()   # sets ledger_ok False when the file cannot be read
         self.urls = set(e["url"] for e in self.ledger if e.get("url"))
         self.ids = set(str(i).lower() for e in self.ledger for i in (e.get("identifiers") or []))
-
     def add(self, cid, sev, line, msg, fix):
         self.findings.append(dict(check_id=cid, severity=sev, line=int(line), message=msg, remedy=fix))
     def bad(self, cid, line, msg, fix): self.add(cid, "block", line, msg, fix)
@@ -144,7 +140,6 @@ class Ctx(object):
     def inspan(self, name, i0): return any(a <= i0 < b for a, b in self.spans.get(name, ()))
     def text(self, name):
         return "\n".join("\n".join(self.lines[a:b]) for a, b in self.spans.get(name, ()))
-
     def _ledger(self):
         case, rows = self.fm.get("case_id", ""), []
         try:
@@ -156,7 +151,6 @@ class Ctx(object):
             except ValueError: r = None
             if r and (not case or r.get("case_id") == case): rows.append(r)
         return rows
-
     def logical(self, name=None):
         """(1-based line, text) pairs, every occurrence of the section, wrapped lines merged."""
         out = []
@@ -167,7 +161,6 @@ class Ctx(object):
                         and not RE_LEAD.match(ln)): out[-1] = (out[-1][0], out[-1][1] + " " + ln.strip())
                 else: out.append((i + 1, ln))
         return [(n, t) for n, t in out if t.strip()]
-
     def cited(self):
         low = self.raw.lower()
         hit = [e for e in self.ledger if (e.get("url") and e["url"] in self.raw)
@@ -180,8 +173,7 @@ class Ctx(object):
             n += chunk.count("\n") + 2
         return out
     def bodies(self):
-        """Up to 60 readable cached bodies for this case, newest first. Position in the
-        ledger never disqualifies a body: only unreadability does."""
+        """Up to 60 readable cached bodies, newest first. Only unreadability disqualifies one."""
         if self._bodies is None:
             self._bodies, seen = [], set()
             for e in reversed(self.ledger):
@@ -203,9 +195,10 @@ def c1_structure(x):
     if x.fm.get("distribution") and not x.fm["distribution"].startswith("internal-only"):
         x.bad("C1", x.fm_line.get("distribution", 1), "distribution must be internal-only",
               "set distribution: internal-only")
-    if x.fm.get("generated_by") and not x.fm["generated_by"].startswith("lacuna@"):
-        x.bad("C1", x.fm_line.get("generated_by", 1), "generated_by must be lacuna@<git-sha>",
-              "run lacuna check for the sha")
+    gen = (x.fm.get("generated_by") or "").strip()
+    if gen and not re.match(r"^lacuna@(?:[0-9a-f]{7,40}|v\d+(?:\.\d+){1,2})$", gen):
+        x.bad("C1", x.fm_line.get("generated_by", 1), "generated_by %r names no build: lacuna@<git "
+              "sha> or lacuna@v<version> only, never lacuna@unknown" % gen, "run lacuna check")
     for d in x.dupes:
         x.bad("C1", x.spans[d][1][0], "duplicate section heading ## %s: a repeated heading hides "
               "its body from the section-scoped checks" % d, "merge the two blocks")
@@ -391,11 +384,22 @@ def c6_quotes(x):
         x.bad("C6", 1, "a quote that failed verification was deleted rather than sourced",
               "restore it with its retrieved source, or state the claim unquoted and cite it")
     x.pending_quotes = sorted((pending | failed) - matched)
+def _blocks(x, name):
+    """Blank-line-separated paragraphs of a section: (joined text, [(offset, line, text)]).
+    Wrapped-line merging stops at a list marker, so C7 pairs over the whole paragraph."""
+    out, cur, pos = [], [], 0
+    for a, b in list(x.spans.get(name, ())) + [(0, 0)]:
+        for i in list(range(a, min(b, len(x.lines)))) + [-1]:
+            ln = x.lines[i].strip() if i >= 0 else ""
+            if ln: cur.append((pos, i + 1, ln)); pos += len(ln) + 1
+            elif cur: out.append((" ".join(t for _p, _n, t in cur), cur)); cur, pos = [], 0
+    return out
 def c7_confidence(x):
     for name in x.sec:
-        for line, text in x.logical(name):
-            if re.match(r"^\s*-?\s*Reference class:", text): continue
+        for text, parts in _blocks(x, name):
             for em in RE_EST.finditer(text):
+                line, row = next(((n, t) for p, n, t in reversed(parts) if p <= em.start()), (1, ""))
+                if re.match(r"^\s*-?\s*Reference class:", row): continue
                 gaps = [text[min(em.end(), c.end()):max(em.start(), c.start())]
                         for c in RE_OUT.finditer(text)]
                 if not any(len(g.split()) <= 15 for g in gaps): continue
@@ -474,8 +478,7 @@ def c9_catalysts(x):
 def c10_searched(x):
     if "What was searched" not in x.sec:
         return x.bad("C10", 1, "## What was searched is missing", "run lacuna searched")
-    # Both sides are stripped of quotes: `searched` prints shlex-quoted argv, the ledger stores
-    # the raw list, and a naive comparison makes every multi-word query an unfixable block.
+    # Quotes are stripped both sides: shlex-quoted argv against the raw list blocks every query.
     line, body = x.sec["What was searched"][0], _unq(x.text("What was searched"))
     if not body: return x.bad("C10", line, "## What was searched is empty", "run lacuna searched")
     for e in x.ledger:
@@ -489,11 +492,8 @@ def _write(x, text):
     try:
         with open(x.path, "w", encoding="utf-8") as fh: fh.write(text)
     except OSError as exc:
-        x.infra.append("could not rewrite the memo: %s" % exc)
-        return x.raw
+        x.infra.append("could not rewrite the memo: %s" % exc); return x.raw
     return text
-
-
 def _flush(x):
     lines = list(x.lines)
     for at, block in sorted(x.inserts, key=lambda p: -p[0]): lines[at:at] = block
@@ -510,6 +510,7 @@ def _clear(sentinel):
     except OSError: pass
 def run_verify(memo_path, state_dir, config, net, blocking):
     """Run the ten checks over one memo. Content blocks; infrastructure never does."""
+    memo_path = os.path.realpath(memo_path)   # verified.json and the quote state key on this
     t0, sentinel = time.time(), os.path.join(state_dir, "last-verify.json")
     _save(sentinel, {"path": memo_path, "started": _iso(_now())})
     try:
@@ -534,7 +535,6 @@ def run_verify(memo_path, state_dir, config, net, blocking):
     store = _load(vpath, {})
     if not isinstance(store, dict): store = {}
     prev = store.get(memo_path) or {}
-
     sig = hashlib.sha256("|".join(sorted(f["check_id"] + ":" + f["message"]
                                          for f in blocks)).encode("utf-8")).hexdigest()[:16]
     attempts = (prev.get("attempts", 0) + 1) if prev.get("sig") == sig else 1

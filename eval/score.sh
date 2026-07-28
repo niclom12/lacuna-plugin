@@ -4,7 +4,17 @@
 # Usage:
 #   sh eval/score.sh <path-to-memo.md> [path-to-ledger.jsonl]
 #
+# Getting this script if you do not have it. It ships inside the plugin, which on a fresh
+# install lives in the plugin cache rather than in the project. Either:
+#   1. git clone https://github.com/niclom12/lacuna-plugin && sh lacuna-plugin/eval/score.sh <memo>
+#   2. read the absolute plugin binary path from the first line of the project's
+#      .lacuna/bin-path file and run "$(dirname <that path>)/../eval/score.sh" <memo>
+#
+# The ledger is found automatically: a memo at <proj>/cases/<id>/memo.md implies a ledger at
+# <proj>/.lacuna/ledger.jsonl. Pass it as argument 2, or set LEDGER, to override.
+#
 # Environment:
+#   LEDGER         path to ledger.jsonl. Overrides the derived path. Argument 2 wins over it.
 #   SCORER_EMAIL   contact address placed in the curl User-Agent. Set it.
 #                  Default: lacuna-eval@example.invalid
 #   CL_TOKEN       free CourtListener API token. REQUIRED for the M2 case-name half:
@@ -23,7 +33,7 @@
 set -u
 
 MEMO=${1:-}
-LEDGER=${2:-}
+LEDGER=${2:-${LEDGER:-}}
 SCORER_EMAIL=${SCORER_EMAIL:-lacuna-eval@example.invalid}
 CL_TOKEN=${CL_TOKEN:-}
 UA="lacuna-eval $SCORER_EMAIL"
@@ -40,15 +50,24 @@ if [ ! -f "$MEMO" ]; then
     exit 1
 fi
 
+# A memo at <proj>/cases/<id>/memo.md puts the ledger at <proj>/.lacuna/ledger.jsonl. Two
+# dirname steps off the memo give <proj>, so the scorer works from any working directory.
 if [ -z "$LEDGER" ]; then
-    LEDGER=".lacuna/ledger.jsonl"
+    PROJ=$(dirname "$(dirname "$(dirname "$MEMO")")")
+    LEDGER="$PROJ/.lacuna/ledger.jsonl"
+    if [ ! -f "$LEDGER" ] && [ -f ".lacuna/ledger.jsonl" ]; then
+        LEDGER=".lacuna/ledger.jsonl"
+    fi
 fi
 
 FAILURES=0
 INCONCLUSIVE=0
+UNSCORABLE=0
 
 report() {
-    # report <id> <PASS|FAIL|INCONCLUSIVE> <message...>
+    # report <id> <PASS|FAIL|INCONCLUSIVE|UNSCORABLE> <message...>
+    # UNSCORABLE means the input needed to run the check was absent, so the criterion was
+    # not evaluated. It fails the run: an unevaluated MUST is never a pass.
     id=$1
     verdict=$2
     shift 2
@@ -58,6 +77,9 @@ report() {
     fi
     if [ "$verdict" = "INCONCLUSIVE" ]; then
         INCONCLUSIVE=$((INCONCLUSIVE + 1))
+    fi
+    if [ "$verdict" = "UNSCORABLE" ]; then
+        UNSCORABLE=$((UNSCORABLE + 1))
     fi
 }
 
@@ -302,9 +324,13 @@ fi
 # ------------------------------------------------------------- M7 freshness
 
 if [ ! -f "$LEDGER" ]; then
-    report M7 INCONCLUSIVE "no ledger at $LEDGER"
+    echo "ERROR: no ledger file at $LEDGER. M7 checks freshness against the retrieval record," >&2
+    echo "ERROR: so with no ledger it was not checked at all and no run can be scored on it." >&2
+    echo "ERROR: Copy .lacuna/ledger.jsonl from the run's project directory, pass its path as" >&2
+    echo "ERROR: argument 2, or set LEDGER=<path>, then run this scorer again." >&2
+    report M7 UNSCORABLE "no ledger at $LEDGER, see the ERROR lines above"
 elif ! have_python; then
-    report M7 INCONCLUSIVE "python3 missing, cannot read the ledger"
+    report M7 UNSCORABLE "python3 missing, cannot read the ledger"
 else
     M7_OUT=$(python3 - "$MEMO" "$LEDGER" <<'PY'
 import datetime
@@ -374,7 +400,7 @@ try:
                 if did not in newest or stamp > newest[did]:
                     newest[did] = stamp
 except OSError as exc:
-    print("INCONCLUSIVE could not read the ledger: %s" % exc)
+    print("UNSCORABLE could not read the ledger: %s" % exc)
     raise SystemExit(0)
 
 problems = []
@@ -405,6 +431,10 @@ PY
     fi
     if printf '%s' "$M7_OUT" | grep -q '^INCONCLUSIVE'; then
         INCONCLUSIVE=$((INCONCLUSIVE + 1))
+    fi
+    if printf '%s' "$M7_OUT" | grep -q '^UNSCORABLE'; then
+        echo "ERROR: the ledger at $LEDGER could not be read, so M7 was not checked." >&2
+        UNSCORABLE=$((UNSCORABLE + 1))
     fi
 fi
 
@@ -448,10 +478,15 @@ fi
 echo
 echo "mechanical criteria checked: M1 M2 M3 M7 M8"
 echo "judged by a reader against RUBRIC.md: M4 M5 M6, S1 to S7, anti-criteria A1 to A5"
-echo "failures: $FAILURES   inconclusive: $INCONCLUSIVE"
+echo "failures: $FAILURES   inconclusive: $INCONCLUSIVE   unscorable: $UNSCORABLE"
 
 if [ "$FAILURES" -gt 0 ]; then
     echo "RESULT: FAIL"
+    exit 1
+fi
+
+if [ "$UNSCORABLE" -gt 0 ]; then
+    echo "RESULT: FAIL (a MUST criterion could not be evaluated, see the ERROR lines)"
     exit 1
 fi
 

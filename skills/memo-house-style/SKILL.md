@@ -59,6 +59,10 @@ Every factual line in `## Verified facts` carries one of:
 Rules:
 
 - `[web, verify]` marks an untrusted host. It may never appear in `## Verified facts`.
+- `[web, verify]` applies only to material the main session supplies, since the
+  case-researcher agent has no web tools at all. The main session's own web access is held
+  to the approved hosts by the pre-tool allowlist, so in the normal research flow this tag
+  does not come up.
 - `[model knowledge, UNVERIFIED]` may appear only in `## Speculation` or
   `## Rejected and unverified claims`.
 - `[user provided]` requires a matching `## Provenance` entry.

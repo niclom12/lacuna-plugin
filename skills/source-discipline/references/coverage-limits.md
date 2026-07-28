@@ -47,6 +47,22 @@ and citation checking is structurally blind to it.
 
 ---
 
+## Known limits of the checks
+
+The memo checks are deterministic code, so they see only what they were written to see. What
+each one actually proves, and where it stops:
+
+| Check | What defeats it |
+|---|---|
+| **Confidence lint** | It is a lint over common phrasings: percentages, decimals, "three in four", "more likely than not", and a short list of outcome verbs, read over each paragraph. A probability worded outside that list, or placed far from the outcome it attaches to, is not flagged. |
+| **Nonpublic-leak check** | It matches exact word runs from `## Provenance` against the guarded sections. It catches copy-paste. A paraphrase of the same material passes straight through. |
+| **URL provenance** | It requires that an allowlisted URL carry an accession, docket or CIK that the ledger already holds. That proves the host and the identifier were retrieved. It cannot prove the exact document path in the link is the one that was fetched. |
+
+None of these replaces a human reading the memo. A memo that passes every check has had no
+check catch anything, which is a far weaker statement than the memo being correct.
+
+---
+
 ## How failures are worded
 
 Six distinct outcomes. Only one of them means nothing was found.

@@ -16,6 +16,27 @@ Mechanical checks run as:
 sh eval/score.sh cases/<case-id>/memo.md
 ```
 
+### Finding `score.sh`
+
+`eval/score.sh` ships inside the plugin, which on a fresh install sits in Claude Code's
+plugin cache rather than in the project you ran the task in. Two ways to get to it:
+
+```sh
+# 1. Clone the plugin anywhere and run the script from the clone.
+git clone https://github.com/niclom12/lacuna-plugin
+sh lacuna-plugin/eval/score.sh cases/<case-id>/memo.md
+
+# 2. Read the installed plugin's absolute path out of the project itself. The first line of
+#    .lacuna/bin-path is the absolute path of bin/lacuna, so eval/ is one level up from bin/.
+BIN=$(head -n 1 .lacuna/bin-path)
+sh "$(dirname "$BIN")/../eval/score.sh" cases/<case-id>/memo.md
+```
+
+The scorer derives the ledger path from the memo path: a memo at `<proj>/cases/<id>/memo.md`
+implies `<proj>/.lacuna/ledger.jsonl`. Pass the ledger as argument 2, or set `LEDGER=<path>`,
+when the two were separated. With no readable ledger the scorer prints `ERROR:` lines, marks
+M7 `UNSCORABLE` and fails the run, because an unevaluated MUST is never a pass.
+
 That script covers M1, M2, M3, M7 and M8. M4, M5 and M6 and all seven SHOULDs are judged by
 a reader against the definitions below.
 
@@ -146,6 +167,9 @@ ledger line's API URL and `identifiers`, then compares that line's `ts` to the m
 `As of:`. The memo carries the human permalink because that is what the tool prints, while
 the ledger carries the v4 API URL it actually fetched, so a string comparison fails every
 correct memo.
+
+**Unscorable if** the ledger cannot be read. The scorer says so on `stderr` and fails the
+run. It never reports a freshness verdict it did not compute.
 
 **Fails if** a cited docket URL has no ledger entry at all, or its newest ledger entry is
 more than 24 hours from the `As of:` stamp. A four-week-old memo carrying a fresh timestamp

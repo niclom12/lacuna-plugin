@@ -70,6 +70,24 @@ for each are in `RUBRIC.md`. The mechanical portion runs as:
 sh eval/score.sh cases/<case-id>/memo.md
 ```
 
+`eval/score.sh` lives inside the plugin, and on a fresh install the plugin sits in Claude
+Code's cache rather than in the project you ran the task in. Resolve it either way:
+
+```sh
+# 1. Clone the plugin and run the copy in the clone.
+git clone https://github.com/niclom12/lacuna-plugin
+sh lacuna-plugin/eval/score.sh cases/<case-id>/memo.md
+
+# 2. Take the installed absolute path from the first line of the project's .lacuna/bin-path,
+#    which points at bin/lacuna, and go one level up from bin/ to reach eval/.
+BIN=$(head -n 1 .lacuna/bin-path)
+sh "$(dirname "$BIN")/../eval/score.sh" cases/<case-id>/memo.md
+```
+
+The scorer finds `.lacuna/ledger.jsonl` from the memo path on its own. Pass the ledger as
+argument 2, or set `LEDGER=<path>`, if you moved the two apart. A missing ledger prints
+`ERROR:` lines and marks M7 `UNSCORABLE`, which fails the run rather than passing quietly.
+
 ---
 
 ## Negative controls

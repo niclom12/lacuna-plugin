@@ -24,7 +24,7 @@ Everything else is folded in below. §19 is the register of findings deliberatel
 
 ---
 
-## Build deviations from this design (lacuna 1.0.0)
+## Build deviations from this design (lacuna 0.1.0)
 
 This document is the design intent. Three parts of it are deliberately **not** in the
 shipped build, and the shipped surface says so rather than implying otherwise:

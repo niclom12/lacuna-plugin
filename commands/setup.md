@@ -255,15 +255,20 @@ python3 "$LACUNA" edgar search "securities class action" --forms 8-K
 ```
 
 ```
-python3 "$LACUNA" court cite -
+printf '347 U.S. 483' | python3 "$LACUNA" court cite -
 ```
 
-For the citation check, feed the text `347 U.S. 483` on stdin. Use that citation and no
+The citation must be piped in on the same command, exactly as written above. `court cite -`
+reads stdin, and with empty stdin it prints "no reporter-style citations were found" and
+exits 0, so a run that verified nothing would read as a success. Use that citation and no
 other: it is *Brown v. Board of Education*, it is settled, and it will not surface a live
 controversy in a transcript on a client machine.
 
-Print the second probe table. If the citation lookup now returns a resolved cluster, say
-"Case-law verification: ON" out loud.
+Print the second probe table. Say "Case-law verification: ON" only if the output names
+`347 U.S. 483` with a found status (`VERIFIED`, or status 200). Any other output means the
+check is OFF, including "no reporter-style citations were found", an error prefix, or an
+empty result. Report it as OFF in those words and say which of the two causes it was: no
+token installed, or the lookup was unreachable.
 
 ## Step 9. Close
 

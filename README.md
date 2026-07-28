@@ -36,11 +36,12 @@ memo to the exact set of guardrails that produced it. If you copied the folder
 rather than cloning it, run this once inside it:
 
 ```
-git init && git add -A && git commit -m "lacuna 1.0.0"
+git init && git add -A && git commit -m "lacuna 0.1.0"
 ```
 
 If you skip that, the session banner says so in a `WARNING:` line and every
-memo carries `generated_by: lacuna@unknown`.
+memo carries `generated_by: lacuna@v0.1.0`, which names the release but not the
+exact tree, so two installs of the same release are indistinguishable.
 
 ## 3. Confirm it installed
 
@@ -120,6 +121,27 @@ get the full verification report printed without blocking anything.
   close series reports moves that did not happen. `## Price evidence` says
   "DATA GAP" and the verifier blocks any return figure written there that no
   ledgered price fetch backs.
+
+### Known limits of the checks
+
+The checks that run on every memo are deterministic code, and deterministic code
+sees only what it was written to see. Stated plainly:
+
+- **The confidence check is a lint over common phrasings.** It looks for
+  percentages, decimals, "three in four", "more likely than not" and a short list
+  of outcome verbs, read over each paragraph. A probability expressed in wording
+  it does not carry, or split far enough from the outcome it refers to, goes
+  unchallenged.
+- **The nonpublic-leak check matches exact wording.** It compares word runs from
+  `## Provenance` against the guarded sections. Reworded material carries the same
+  information past it. It catches copy-paste, and a paraphrase defeats it.
+- **URL provenance stops at the host and the identifier.** The verifier requires
+  that an allowlisted URL carry an accession, docket or CIK that appears in the
+  ledger. That proves those were retrieved. It cannot prove that the specific
+  document path in the link is the one that was fetched.
+- **None of this replaces a human reading the memo.** Every check is a floor
+  under obvious fabrication. Passing them means no check caught anything, which is
+  a much weaker claim than the memo being right.
 
 ## 7. Why the friction exists
 
