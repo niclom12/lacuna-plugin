@@ -70,7 +70,6 @@ Render the result as two markdown tables. Do not paste raw JSON at the user.
 | Check | State | What it means if it is down |
 |---|---|---|
 | GDELT news | ok / throttled / down | News search is down right now. Memos will say "news unavailable" instead of guessing. You can still work. |
-| Yahoo prices | ok / throttled / down | Price evidence will be missing from memos. Everything else works. |
 | CourtListener citation verification | ok / off / down | Case citations cannot be machine-checked. Every memo will carry a "Case-law verification: OFF" banner and every case citation will be confined to the rejected section. Step 4 fixes this. |
 
 Four states: `ok`, `throttled, retry`, `setup`, `down`.

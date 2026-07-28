@@ -1,5 +1,5 @@
 ---
-description: Research a company, case name or docket number across federal dockets, SEC filings, news and price history, then write a verified memo to cases/<case-id>/memo.md. Dispatches the case-researcher agent. Takes 3 to 8 minutes with progress lines.
+description: Research a company, case name or docket number across federal dockets, SEC filings and news, then write a verified memo to cases/<case-id>/memo.md. Dispatches the case-researcher agent. Takes 3 to 8 minutes with progress lines.
 argument-hint: "<company, case name, or docket number>"
 ---
 

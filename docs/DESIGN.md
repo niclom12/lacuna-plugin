@@ -24,6 +24,28 @@ Everything else is folded in below. §19 is the register of findings deliberatel
 
 ---
 
+## Build deviations from this design (lacuna 1.0.0)
+
+This document is the design intent. Three parts of it are deliberately **not** in the
+shipped build, and the shipped surface says so rather than implying otherwise:
+
+1. **No price leg.** `price`, the Yahoo probe and the Yahoo allowlist entry are absent.
+   Section 6.4 items 6 to 8 specify the split, halt and disclosure-window handling that
+   makes a return figure honest; without those a raw close series reports moves that did
+   not happen, and a partial leg is worse than none. `## Price evidence` ships as a
+   documented DATA GAP, and check C9 blocks any return or percentage written there that no
+   ledgered `price` retrieval backs. Implementing the leg re-enables the section with no
+   further verifier change.
+2. **No `purge` subcommand.** README section 10 gives the manual steps instead. This is a
+   real gap, and the reasoning at section 10 of this document still stands: strict
+   append-only with no purge path is a liability once privileged material is involved.
+3. **No `cache gc` subcommand.** Pruning still happens automatically on every write at
+   200 MB or 30 days.
+
+Section 12's claim that the `case-researcher` agent's Bash is restricted to the resolved
+`bin/lacuna` path was also removed: agent frontmatter has no path-scoping syntax, so
+nothing enforced it. Prose is not a gate.
+
 ## 1. What we are building
 
 A single Claude Code plugin, installed in two pasted lines, that turns a fresh Claude Code session into a litigation-research desk for people who are not lawyers, not traders by training, and not AI-savvy. It reads federal dockets and SEC filings, mechanically checks that everything it cites was actually retrieved, and writes a memo whose unverifiable parts are visually separated from its verifiable ones.

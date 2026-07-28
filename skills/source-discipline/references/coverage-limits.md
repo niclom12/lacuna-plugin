@@ -12,7 +12,7 @@ reader who is not a lawyer and not technical.
 | CourtListener and RECAP | Federal court dockets and opinions, contributed and archived | Opinions go back to the founding. Docket entries only exist where a user has contributed them. | Free. A free token unlocks citation checking. |
 | SEC EDGAR | Every filing a US public company makes | Full text from 2001. Archives older. | Free. Requires a real contact email. |
 | GDELT | Worldwide news index | About 90 days | Free |
-| Yahoo chart | Daily price bars | Long history for listed tickers | Free, undocumented, can change without notice |
+| price data | none in this build | nothing | There is no price leg. `## Price evidence` reports a DATA GAP and no return figure may be written |
 
 ---
 

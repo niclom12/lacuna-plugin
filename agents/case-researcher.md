@@ -1,6 +1,6 @@
 ---
 name: case-researcher
-description: Runs one full litigation research pass on a company, case name or docket number and writes the verified memo to cases/<case-id>/memo.md. Use when a research run needs federal docket searches across multiple legal angles, SEC filing retrieval, news and price evidence, and a memo that passes the lacuna verifier. Dispatched by /lacuna:research.
+description: Runs one full litigation research pass on a company, case name or docket number and writes the verified memo to cases/<case-id>/memo.md. Use when a research run needs federal docket searches across multiple legal angles, SEC filing retrieval, news, and a memo that passes the lacuna verifier. Dispatched by /lacuna:research.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 ---
@@ -41,7 +41,7 @@ substitution is denied, because a wall that cannot read the command it is approv
 a wall.
 
 **One network operation per Bash call**, with a generous explicit timeout. The sources are
-paced (SEC 150 ms, CourtListener 1200 ms, GDELT 5500 ms, Yahoo 1000 ms) behind a shared
+paced (SEC 150 ms, CourtListener 1200 ms, GDELT 5500 ms) behind a shared
 cross-process lock. Chaining several paced calls into one invocation gets the invocation
 killed mid-sleep and loses the partial results.
 

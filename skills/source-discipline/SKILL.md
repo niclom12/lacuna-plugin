@@ -42,7 +42,7 @@ checked. It had not.
 | CourtListener and RECAP | Federal dockets, federal opinions, state **appellate** opinions | State **trial** courts, in every state. Sealed material. PACER entries no user has contributed. |
 | SEC EDGAR | US public company filings. Full text from **2001**. | Pre-2001 full-text search, private companies, most foreign issuers, anything in an unparsed PDF exhibit. |
 | GDELT | Global news, roughly the last **three months** | Anything older. Paywalled outlets. Trade press with no open feed. |
-| Yahoo chart | Daily bars for listed tickers | Anything unlisted, and it is an undocumented endpoint that can change without notice. |
+| price data | **nothing: this build has no price leg** | Every return, percentage and characterisation of how a stock moved. `## Price evidence` is a DATA GAP, and a figure written there that no ledgered price retrieval backs is a blocking finding. |
 
 A query outside a source's coverage returns **"outside coverage"** in the memo. It never
 returns silence, and it never returns "no such case". A Delaware Superior Court docket that

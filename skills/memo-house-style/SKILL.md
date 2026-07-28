@@ -132,7 +132,7 @@ Every claim or document the user handed over gets a `## Provenance` line:
 - user-supplied: "<the claim>" <sep> public:<ledgered url> | nonpublic | unknown <sep> used-as: <background|rejected>
 ```
 
-Use the separator shape shown in `templates/memo.md`. Classification is mechanical:
+Use the separator shape shown in `<LACUNA_ROOT>/templates/memo.md`. Classification is mechanical:
 
 - **public** requires a ledgered URL on an allowlisted host that you fetched this run.
 - **nonpublic** is anything you know came from a sealed, confidential or internal source.
@@ -149,7 +149,7 @@ sourced-looking one.
 
 ## 8. Catalyst calendar
 
-Copy the bullet shape from `templates/memo.md` and fill every slot. An item labelled
+Copy the bullet shape from `<LACUNA_ROOT>/templates/memo.md` and fill every slot. An item labelled
 `scheduled` requires all four of: the court, a time with an explicit time zone, a source
 link, and the quoted docket entry text. Court deadlines are local-time and court-specific;
 a bare date under a UTC header silently shifts a 16:00 PT hearing to the following day.
