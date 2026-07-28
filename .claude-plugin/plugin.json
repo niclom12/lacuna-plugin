@@ -1,0 +1,19 @@
+{
+  "name": "lacuna",
+  "version": "0.1.0",
+  "description": "Turns a Claude Code session into a litigation research desk. Reads federal court dockets and SEC filings, mechanically checks that every case and filing it cites is real and was actually retrieved, and writes a memo that keeps unverifiable material visually separate from verified facts. It never places a trade.",
+  "author": {
+    "name": "Lacuna",
+    "url": "https://github.com/niclom12/lacuna-plugin"
+  },
+  "homepage": "https://github.com/niclom12/lacuna-plugin",
+  "repository": "https://github.com/niclom12/lacuna-plugin",
+  "license": "MIT",
+  "keywords": [
+    "litigation",
+    "research",
+    "courtlistener",
+    "sec-edgar",
+    "citation-verification"
+  ]
+}

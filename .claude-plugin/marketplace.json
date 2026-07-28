@@ -1,0 +1,17 @@
+{
+  "name": "lacuna-tools",
+  "owner": {
+    "name": "Lacuna",
+    "url": "https://github.com/niclom12/lacuna-plugin"
+  },
+  "metadata": {
+    "description": "Litigation-driven research tooling for Claude Code.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "lacuna",
+      "source": "./"
+    }
+  ]
+}
