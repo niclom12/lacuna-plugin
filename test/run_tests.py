@@ -234,6 +234,20 @@ class MemoCase(Harness, unittest.TestCase):
         self.assertBlocked(res, "C7", "75%")
         self.assertIn("is missing", " ".join(f["message"] for f in self.blocks(res)))
 
+    # 16
+    def test_16_negative_retrieval_about_an_unresolved_case_blocks_in_verified_facts(self):
+        """Reproduces the live eval-1 memo, which recorded 'a CourtListener opinion search for
+        "Karlsson Meridian Bioscience securities" returned 0 results' under ## Verified facts.
+        A search outcome is not a verified fact, and naming the unresolved case there reads to
+        a skimming reader as a case this desk checked."""
+        res = self.run_one("16-negative-retrieval-in-verified.md", ledger="karlsson")
+        self.assertBlocked(res, "C3", "move search-outcome records to ## What was searched")
+        joined = " ".join(f["message"] + " " + f["remedy"] for f in self.blocks(res)
+                          if f["check_id"] == "C3")
+        self.assertIn("Karlsson", joined)
+        self.assertIn("## Verified facts", joined)
+        self.assertIn("## Rejected and unverified claims", joined)
+
     # 14
     def test_14_third_fire_writes_the_failure_banner_and_stops_blocking(self):
         memo_path, state = self.case("14-third-fire.md")
@@ -264,6 +278,16 @@ class GuardrailCase(Harness, unittest.TestCase):
         self.assertBlocked(res, "C1", "duplicate section heading")
         self.assertTrue([f for f in self.blocks(res) if f["check_id"] == "C7"],
                         "the duplicated block must still be reachable by the other checks")
+
+    def test_a_public_docket_permalink_satisfies_the_provenance_check(self):
+        """Memos cite https://www.courtlistener.com/docket/<id>/<slug>/ because a reader without a
+        CourtListener token gets 401 from the v4 API URL. C5 has to read the docket id out of that
+        path, or the readable form would be the one the checker rejects."""
+        res = self.run_one("01-clean.md", edit=after(
+            "## Inference", "Counsel of record was read from the docket sheet. [CourtListener] "
+            "https://www.courtlistener.com/docket/70000001/roe-v-acme-robotics-inc/"))
+        self.assertEqual([f["message"] for f in self.blocks(res) if f["check_id"] == "C5"], [])
+        self.assertClean(res)
 
     def test_a_pruned_cache_blocks_rather_than_silently_disarming_the_quote_check(self):
         memo_path, state = self.case("03-fabricated-quote.md")

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-"""lacuna data engine. Python 3 stdlib only. Dispatcher, config, HTTP core with pacing, cross-process
-locking, ledger, cache, untrusted-content fencing, and the three hook entrypoints.
-Invoke as: python3 "<absolute path to this file>" <subcommand> ...   Never as a bare `lacuna`."""
+"""lacuna data engine. Python 3 stdlib only. Dispatcher, config, HTTP core with pacing, cross-process locking,
+ledger, cache, fencing, hooks. Invoke as: python3 "<absolute path to this file>" <sub> ...  Never bare `lacuna`."""
 import argparse, fcntl, hashlib, importlib.util, json, os, re, shlex, ssl, subprocess, sys, time
 import urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timedelta, timezone
@@ -33,7 +32,6 @@ BROKER_HOSTS = {"alpaca.markets": ("/orders", "/v2/orders", "/positions"), "robi
                 "etrade.com": ("/orders",)}
 ORDER_REASON = ("This desk produces research. A human places every order. The call was blocked because it targets "
                 "an order placement endpoint or a wallet signing tool.")
-
 class Fail(Exception):
     def __init__(self, code, msg):
         super().__init__(msg)
@@ -50,8 +48,14 @@ def cache_dir():
     d.mkdir(parents=True, exist_ok=True)
     return d
 def config_path():
-    base = os.environ.get("CLAUDE_PLUGIN_DATA")
-    return (Path(base) if base else Path.home() / ".config" / "lacuna") / "config.json"
+    """One settings path per machine, whatever launched us. Claude Code exports CLAUDE_PLUGIN_DATA to hooks and
+    MCP servers but not to Bash tool calls, so keying on it made the SessionStart banner read an empty directory
+    while `lacuna check` read the real settings. Home is canonical; the plugin data directory is consulted only
+    to adopt a config an earlier build wrote there. LACUNA_CONFIG overrides both, for tests."""
+    if os.environ.get("LACUNA_CONFIG"): return Path(os.environ["LACUNA_CONFIG"])
+    home, data = Path.home() / ".config" / "lacuna" / "config.json", os.environ.get("CLAUDE_PLUGIN_DATA")
+    legacy = (Path(data) / "config.json") if data else None
+    return legacy if (legacy is not None and legacy.exists() and not home.exists()) else home
 _CFG = None
 def config(reload=False):
     global _CFG
@@ -95,8 +99,7 @@ def read_text(path):
 PLACEHOLDER_RE = re.compile(r"^[ \t]*(?:[-*][ \t]+)?[^:\n]*:[ \t]*\[PLACEHOLDER\][ \t]*$"
                             r"|^[ \t]*[-*][ \t]*\[PLACEHOLDER\][ \t]*$", re.M)
 def profile_unfilled(cwd=None):
-    """Only a placeholder standing in a FIELD position counts. Matching the bare string
-    anywhere lets the template's own prose about placeholders brick the install."""
+    """Only a placeholder in a FIELD position counts: the bare string anywhere would let the template's own prose brick the install."""
     text = read_text(Path(cwd or os.getcwd()) / "cases" / "profile.md")
     return (not text) or bool(PLACEHOLDER_RE.search(text))
 def require_profile(cwd=None):
@@ -236,7 +239,11 @@ def sane_json_key(key):
         if ('"%s"' % key) not in raw[:200000]: return "JSON is missing the expected %r key" % key
         return None
     return check
-def court_id(value): return str(value or "").rstrip("/").rsplit("/", 1)[-1]
+def court_id(value):
+    """A CourtListener `court` field is a hyperlink, and with ?format=json in flight DRF propagates that suffix
+    onto it, so a naive rsplit returns "?format=json". Take the last non-empty PATH segment, never the query."""
+    segs = [s for s in urllib.parse.urlsplit(str(value or "").strip()).path.split("/") if s]
+    return segs[-1] if segs else ""
 def cl_auth():
     token = (config().get("courtlistener_token") or "").strip()
     return {"Authorization": "Token " + token} if token else {}
@@ -246,7 +253,6 @@ class Net:
         self.case_id, self.cache_file = case_id, state_dir() / "cite-cache.json"
     @staticmethod
     def norm(cite): return re.sub(r"\s+", " ", (cite or "").strip()).lower()
-
     @staticmethod
     def chunks(text, max_bytes=60000, max_cites=60):
         out, buf, cites, size = [], [], 0, 0
@@ -257,7 +263,6 @@ class Net:
             buf.append(line); cites += n; size += len(line.encode("utf-8"))
         if buf: out.append("".join(buf))
         return out or [""]
-
     def cite_lookup(self, text_blob):
         token = (config().get("courtlistener_token") or "").strip()
         if not token: return None
@@ -284,7 +289,6 @@ class Net:
         try: self.cache_file.write_text(json.dumps(cache, indent=1, sort_keys=True), encoding="utf-8")
         except OSError: pass
         return results
-
     def docket_lookup(self, docket_number, court_hint=None):
         params = {"docket_number": docket_number}
         if court_hint: params["court"] = court_hint
@@ -586,8 +590,7 @@ def cmd_check(a):
            "contact_email": cfg.get("contact_email") or "not set",
            "courtlistener_token": ("present (…%s)" % token[-4:]) if token else "absent",
            "case_law_verification": "ON" if token else "OFF", "required": required, "optional": optional}
-    # A `setup` row means a config value a later setup step supplies is not there yet, which is the
-    # expected state on a clean machine. Only an unreachable required source is an error.
+    # A `setup` row means a later setup step has not supplied that value yet, the expected clean-machine state.
     code = 3 if any(r["state"] == "down" for r in required) else 0
     if a.json: print(json.dumps(out, indent=2)); return code
     print("settings are stored in: %s\nworkspace state is in:  %s\nplugin sha: %s   python: %s   openssl: %s\n"
@@ -671,8 +674,8 @@ def lacuna_paths(cwd):
     except OSError: pass
     return paths
 def lacuna_argv(seg, cwd):
-    """The argv of a genuine lacuna call, or None. `python3 <resolved bin/lacuna> ...` or the
-    setup shim `lacuna ...`. A substring test is not used: any command may mention the path."""
+    """The argv of a genuine lacuna call, or None: `python3 <resolved bin/lacuna> ...` or the setup shim `lacuna ...`.
+    A substring test is not used, because any command at all may mention the path."""
     base = os.path.basename(seg[0])
     if base == "lacuna" or os.path.realpath(seg[0]) in lacuna_paths(cwd): return seg[1:]
     if base.startswith("python") and len(seg) > 1 and os.path.realpath(seg[1]) in lacuna_paths(cwd):
@@ -798,8 +801,7 @@ def hook_session_start(payload):
     return 0
 SKIP_DIRS = {".git", ".lacuna", "node_modules", ".venv", "venv", "__pycache__"}
 def memo_files(cwd):
-    """Every memo-shaped markdown file in the project, symlinked directories included. A memo
-    is any .md under cases/, or any .md whose frontmatter carries generated_by: lacuna@."""
+    """Every memo-shaped .md, symlinked dirs included: any .md under cases/, or any carrying generated_by: lacuna@."""
     cases, out, seen = os.path.realpath(str(Path(cwd) / "cases")), [], set()
     for base, dirs, files in os.walk(cwd, followlinks=True):
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
@@ -828,8 +830,7 @@ def hook_stop(payload):
         try: digest = hashlib.sha256(memo.read_bytes()).hexdigest()
         except OSError: continue
         prior = verified.get(path) if isinstance(verified.get(path), dict) else {}
-        # Hash alone is not a pass: a memo that blocked and was then left untouched must re-enter
-        # the suite, or one block per file would be the whole ceiling.
+        # Hash alone is not a pass: a memo that blocked then sat untouched must re-enter the suite.
         att = prior.get("attempts", 0)
         if prior.get("sha256") == digest and (att == 0 or att > mod.MAX_BLOCKING_ATTEMPTS): continue
         if time.time() > deadline:
@@ -895,6 +896,5 @@ def main(argv):
         sys.stderr.write("%s %s\n" % (PREFIX.get(exc.code, "ERROR:"), exc.msg)); return exc.code
     except KeyboardInterrupt:
         sys.stderr.write("DATA UNAVAILABLE: interrupted before the request finished\n"); return 3
-
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

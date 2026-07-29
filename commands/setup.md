@@ -278,7 +278,7 @@ Say exactly this shape:
 
 Then one short summary: which sources are live, whether case-law verification is on, where
 the memos will land (`cases/<case-id>/memo.md`), and the fact that a research run takes
-3 to 8 minutes and prints progress lines while it works.
+typically 10 to 25 minutes, with progress lines while it works.
 
 If anything optional stayed down, restate its one-line consequence so the user is not
 surprised later.

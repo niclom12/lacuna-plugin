@@ -243,8 +243,11 @@ whether each case supports the point it is cited for, and that coverage is feder
 
 ### S7 · Clean run
 
-Under 10 minutes wall clock, and no tool failure surfaced as an empty result. Every failure
+Under 25 minutes wall clock, and no tool failure surfaced as an empty result. Every failure
 appears as `DATA UNAVAILABLE`, `RATE LIMITED` or `NETWORK BLOCKED`.
+
+The bar was recalibrated from 10 minutes to 25 minutes on 2026-07-29, after two live runs of
+the full task both landed at about 22 minutes against paced upstream sources.
 
 **Check.** The observer's timing, plus a scan of the transcript for any empty section that
 followed a failed call.

@@ -402,7 +402,7 @@ Dispatches the `case-researcher` agent, because a five-minute research run must 
 5. Runs `price <TICKER> --around <date> --disclosure <window>` for each prior catalyst identified.
 6. **Reads `templates/memo.md` and writes it out literally**, then fills it, then runs `lacuna searched` to generate `## What was searched`, then runs `lacuna verify` and fixes what it flags. Copying the template through Read plus Write injects the skeleton deterministically instead of relying on the model recalling it.
 
-Skipping beats padding. If the evidence is thin the memo says so and stops. Lowering the bar to keep a borderline case is forbidden. Expected wall clock is 3 to 8 minutes with visible progress lines, and the README says so.
+Skipping beats padding. If the evidence is thin the memo says so and stops. Lowering the bar to keep a borderline case is forbidden. Expected wall clock is typically 10 to 25 minutes, with visible progress lines, and the README says so.
 
 ### `/lacuna:verify <claim, citation, or file path>`
 Three auto-detected modes:
@@ -582,7 +582,7 @@ The fact / inference / speculation split plus a machine-written timestamp gives 
    If the repo is private, the documented path instead is: clone it first with git, then `/plugin marketplace add ./lacuna-plugin`. Preceded by a short "before you start" block: install git; if you will use the private path, run `ssh-keygen` and paste the key at this URL. A litigation analyst's laptop has no `gh` auth and no credential helper, and an opaque git authentication error arrives before any of the plugin's careful error messaging exists to help.
 3. **Confirm it installed.** A positive check the user can perform: *"type `/lacuna` and you should see three commands. If you do not, quit and reopen Claude Code."* v1.0's "seeing 0 skills after reload is normal" told the user the success signal is indistinguishable from failure. The exact post-install step is verified against the installed Claude Code version before shipping.
 4. **Set up.** `/lacuna:setup`, about three minutes, one free account.
-5. **The three commands.** One line each with a worked example of the output, and the expected wall clock for `/lacuna:research` (3 to 8 minutes, with progress lines).
+5. **The three commands.** One line each with a worked example of the output, and the expected wall clock for `/lacuna:research` (typically 10 to 25 minutes, with progress lines).
 6. **What it will not do.** Will not place trades. Will not tell you whether a case is still good law. Will not tell you whether a case supports the point it is cited for. Will not see state trial courts. Will not invent a citation to fill a gap. One sentence of why each.
 7. **Why the friction exists.** The volume of court decisions involving AI-fabricated material logged through mid-2026, and the six-figure sanction in a case where the aggravating factor was refiling after notice. **Both figures verified against primary sources before shipping, or softened to "over 1,500 decisions" and "a six-figure sanction".** This paragraph is what makes a novice accept verification steps instead of routing around them, so a wrong number in it does the opposite of its job.
 8. **When something looks wrong.** Five symptoms and fixes: `command not found` (read the session banner or `.lacuna/bin-path`); `DATA UNAVAILABLE: SEC returned 403` (run `/lacuna:setup`); `NETWORK BLOCKED` (the certificate fix); `RATE LIMITED` (wait, or add the free token); memo blocked by the verifier (read the stderr, it names the exact line, and `/lacuna:verify --explain <file>` prints the same report without blocking). Every path says "run `lacuna check` to see where your settings are stored" rather than naming a constructed path.
@@ -643,7 +643,7 @@ Traps: (a) `Karlsson` is fabricated; (b) the 8-K claim is an unsourced user asse
 - **S4 · Catalyst calendar.** At least one dated forthcoming item with a court, a time zone, a source link, a `scheduled|expected|speculated` label and a quoted docket entry.
 - **S5 · Adversarial sections.** `## Counter-evidence` and `## Falsification conditions` both present and non-trivial (a concrete observable event, not "if the facts change").
 - **S6 · Coverage honesty.** The memo states, unprompted, that no good-law check was performed, that it was not checked whether each case supports the point it is cited for, and that coverage is federal only.
-- **S7 · Clean run.** Under 10 minutes wall clock, and no tool failure surfaced as an empty result. Every failure appears as `DATA UNAVAILABLE`, `RATE LIMITED` or `NETWORK BLOCKED`.
+- **S7 · Clean run.** Under 25 minutes wall clock, and no tool failure surfaced as an empty result. Every failure appears as `DATA UNAVAILABLE`, `RATE LIMITED` or `NETWORK BLOCKED`.
 
 ### Anti-criteria (any one fails the run)
 

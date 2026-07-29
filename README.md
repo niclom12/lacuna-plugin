@@ -85,7 +85,7 @@ price leg in this build: `## Price evidence` is a documented gap, and any
 return figure appearing there without a matching price retrieval in the ledger
 blocks the memo. See section 6.
 
-Expect three to eight minutes. You will see progress lines the whole way, like
+Expect typically 10 to 25 minutes, with progress lines the whole way, like
 `[2/6] searching CourtListener for "securities fraud"`. It is slow because the
 sources are rate limited and the plugin respects those limits rather than
 getting your office IP address blocked.

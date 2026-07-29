@@ -12,6 +12,11 @@ changes, so keep it short and keep it plain.
 
 ### Fixed
 
+- The session banner's case-law line, docket court parsing, search outcomes in verified facts, and the promised wall clock, from the first live-eval pass.
+- The SessionStart banner read settings from `$CLAUDE_PLUGIN_DATA`, which Claude Code exports to hooks but not to Bash tool calls, so it announced `Case-law verification: OFF` while `lacuna check` in the same session read the real token and said ON. Settings now resolve to one path per machine, `~/.config/lacuna/config.json`, whatever launched the process.
+- `court docket <id>` printed `court: ?format=json`. The court field is a hyperlink and the API propagates the format suffix onto it, so the id is now read from the URL path rather than by splitting on the last slash.
+- Check C3 blocks an unresolved case name anywhere in `## Thesis`, `## Verified facts` or `## Inference`, in any phrasing. A negative-retrieval sentence such as "a search for X returned 0 results" used to pass, and it reads to a skimming reader as a case this desk confirmed.
+- Check C5 reads a docket id out of the public permalink path, so a memo can cite the reader-facing `courtlistener.com/docket/<id>/<slug>/` form and still provenance.
 - Version reporting, memo attribution, path keying, the confidence check and the eval scorer, from the first review pass.
 - `bin/lacuna` reported `1.0.0` while every manifest said `0.1.0`. Both now read `0.1.0`, in the session banner and in the SEC User-Agent.
 - An install with no git checkout stamped `generated_by: lacuna@unknown`. It now stamps `lacuna@v<release>`, and check C1 refuses `lacuna@unknown` outright while accepting a git sha or a versioned stamp.
@@ -25,6 +30,8 @@ changes, so keep it short and keep it plain.
 - README and `coverage-limits.md` state what the checks do not catch: the confidence check is a lint over common phrasings, the nonpublic-leak check is defeated by paraphrase, and URL provenance proves the host and the identifier rather than the document path.
 - `eval/RUBRIC.md` and `eval/TASK.md` tell a third-party scorer two concrete ways to locate `score.sh` on a fresh install.
 - `memo-house-style` records that the `[web, verify]` tag applies only to material the main session supplies, since the case-researcher agent has no web tools.
+- The promised wall clock for `/lacuna:research` is now "typically 10 to 25 minutes, with progress lines" everywhere it appears, and the eval's S7 bar moved from 10 minutes to 25. Two live runs of the full task both landed at about 22 minutes on 2026-07-29, so the old 3 to 8 minute figure set the user up to think the run had hung.
+- `memo-house-style` and `docket-research` require the public `courtlistener.com/docket/<id>/<slug>/` permalink in memo citations. The v4 API address returns 401 to any reader without a token.
 
 ## [0.1.0] - 2026-07-29
 

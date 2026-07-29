@@ -106,6 +106,21 @@ Two different checks, and the second is the one that matters most here.
 No judge surname appears in a memo unless it matches the `assigned_to` field of a resolved
 docket. A judge name is the easiest thing in this domain to hallucinate confidently.
 
+## Which docket URL goes in the memo
+
+`court docket` prints six fields. The last one is `url:`, and it carries the public
+permalink in the form `https://www.courtlistener.com/docket/<id>/<slug>/`. That is the
+address a memo cites.
+
+The `/api/rest/v4/dockets/<id>/` address the tool fetched stays out of the memo. It returns
+401 to a reader who has no CourtListener token, which is every reader outside this desk, so
+citing it hands the user a link they cannot open and a scorer a caption it cannot check. The
+permalink opens in a browser with no token at all. Check C5 reads the docket id out of the
+permalink path and matches it against the ledger, so the readable form is provenanced just
+as tightly as the API form was.
+
+The same holds for `court search`: its last column is already the permalink.
+
 ## Reading the per-citation statuses
 
 `court cite` returns HTTP 200 with an array whose elements each carry their own `status`.

@@ -1,24 +1,22 @@
-"""lacuna_verify: the ten deterministic memo checks. Python 3 stdlib only.
-Imported by bin/lacuna via importlib. One public entry point, its signature pinned:
-    run_verify(memo_path, state_dir, config, net, blocking) -> dict
-`net` is injected by the caller and exposes cite_lookup(text_blob) and docket_lookup(number,
-court_hint). Either may return None, meaning infrastructure failure, which never blocks."""
+"""lacuna_verify: the ten deterministic memo checks. Python 3 stdlib only, imported by bin/lacuna via importlib.
+One public entry point, signature pinned: run_verify(memo_path, state_dir, config, net, blocking) -> dict. `net` is
+injected and exposes cite_lookup(text_blob) and docket_lookup(number, court_hint). Either may return None, which
+means infrastructure failure and never blocks."""
 import hashlib, html, json, os, re, time, unicodedata
 from datetime import datetime, timezone
-
 BUDGET_SECONDS, MAX_BLOCKING_ATTEMPTS = 90.0, 2
 BANNER = "VERIFICATION FAILED, DO NOT RELY ON THIS MEMO"
 CAVEAT_HEAD, CAVEAT_TAIL = "Citations resolve to real cases:", "NOT CHECKED: whether each case"
 FOOTER = "Internal research only. Not legal advice. Not investment advice. Not a"
 REJECTED, NO_BASE = "## Rejected and unverified claims", "[no empirical base rate, judgment only]"
-SECTIONS = ("Situation|Thesis|Verified facts|Inference|Speculation|Rejected and unverified claims|"
-            "Catalyst calendar|Price evidence|Counter-evidence|Falsification conditions|Provenance|"
-            "What was searched|Action items|Coverage limits").split("|")
+SECTIONS = ("Situation|Thesis|Verified facts|Inference|Speculation|Rejected and unverified claims|Catalyst calendar|"
+            "Price evidence|Counter-evidence|Falsification conditions|Provenance|What was searched|Action items|"
+            "Coverage limits").split("|")
 GUARDED = ["Thesis", "Verified facts", "Catalyst calendar", "Price evidence"]
-FM_KEYS = ("case_id subject tickers status distribution contains_nonpublic generated_by model "
-           "operator").split()
-ALLOW_HOSTS = ("sec.gov data.sec.gov efts.sec.gov courtlistener.com gdeltproject.org "
-               "api.gdeltproject.org").split()
+ASSERTED = ("Thesis", "Verified facts", "Inference")   # the sections a reader is invited to act on
+STOPCAP = set("in re the of and an inc corp co ltd llc plc group holdings united states ex rel".split())
+FM_KEYS = "case_id subject tickers status distribution contains_nonpublic generated_by model operator".split()
+ALLOW_HOSTS = "sec.gov data.sec.gov efts.sec.gov courtlistener.com gdeltproject.org api.gdeltproject.org".split()
 FRESH_HOURS = [("court", 24), ("price", 24), ("edgar", 168), ("news", 720)]
 CONF_LINES = ("Reference class:", "Decision point:", "What would change my mind:")
 WORDNUM = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve"
@@ -30,21 +28,18 @@ _P = r"[A-Z][A-Za-z&.'-]+(?: [A-Z][A-Za-z&.'-]+){0,3}"
 RE_CASE = re.compile(_P + r"\s+v\.?\s+" + _P)
 RE_DOCKET, RE_ACC = re.compile(r"\b\d:\d{2}-[a-z]{2}-\d{4,6}\b"), re.compile(r"\b\d{10}-\d{2}-\d{6}\b")
 RE_URL, RE_LEAD = re.compile(r"https?://[^\s<>\"'\)\]]+"), re.compile(r"^\s*(-|\*|#|\||>|\d+\.)\s")
-RE_TAG = re.compile(r"\[(?:CourtListener|SEC EDGAR|GDELT|market data|web, verify|"
-                    r"model knowledge, UNVERIFIED|user provided)\]")
+RE_DID = re.compile(r"/docket/(\d+)/")   # the public permalink form; its id is what the ledger records
+RE_TAG = re.compile(r"\[(?:CourtListener|SEC EDGAR|GDELT|market data|web, verify|model knowledge, UNVERIFIED|user provided)\]")
 RE_QUOTE = re.compile(u"\u201c([^\u201d]{12,600})\u201d|\"([^\"]{12,600})\"")
 RE_BQ = re.compile(r"^\s*>\s*(.+?)\s*$", re.M)
-RE_PREMISE = re.compile(r"\b(controlling|governs|holds|held|requires|standard|under|applying|"
-                        r"establishes)\b", re.I)
+RE_PREMISE = re.compile(r"\b(controlling|governs|holds|held|requires|standard|under|applying|establishes)\b", re.I)
 RE_ATTRIB = re.compile(r"\b(said|stated|disclosed|held|holds|alleges|alleged|requires|ordered|"
                        r"ruled|concluded|announced|reported|admitted)\b", re.I)
-RE_SRC = re.compile(r"\b(8-K|10-K|10-Q|13D|13G|court|complaint|order|filing|opinion|judge|SEC|"
-                    r"the company)\b", re.I)
-RE_OUT = re.compile(r"\b(surviv\w*|prevail\w*|settl\w*|grant\w*|den(?:y|ies|ied)|affirm\w*|"
-                    r"dismiss\w*)\b", re.I)
-RE_EST = re.compile(r"(\d{1,3}(?:\.\d+)?\s?%)|(\b0\.\d+\b)|(\b(?:\d{1,2}|" + WORDNUM +
-                    r")\s+(?:in|out of)\s+(?:\d{1,2}|" + WORDNUM + r")\b)|"
-                    r"(\bmore likely than not\b)|(\bcoin flip\b)|(\bnear certain\w*\b)", re.I)
+RE_SRC = re.compile(r"\b(8-K|10-K|10-Q|13D|13G|court|complaint|order|filing|opinion|judge|SEC|the company)\b", re.I)
+RE_OUT = re.compile(r"\b(surviv\w*|prevail\w*|settl\w*|grant\w*|den(?:y|ies|ied)|affirm\w*|dismiss\w*)\b", re.I)
+RE_EST = re.compile(r"(\d{1,3}(?:\.\d+)?\s?%)|(\b0\.\d+\b)|(\b(?:\d{1,2}|" + WORDNUM + r")\s+(?:in|out of)\s+"
+                    r"(?:\d{1,2}|" + WORDNUM + r")\b)|(\bmore likely than not\b)|(\bcoin flip\b)|"
+                    r"(\bnear certain\w*\b)", re.I)
 RE_COURT = re.compile(r"\b(?:[NSEWMD]\.? ?D\.? ?[A-Z]|Cir\.|Ch\.|Bankr\.|Court|Chancery)")
 RE_TIME = re.compile(r"\d{1,2}:\d{2}\s*(?:[A-Z]{2,4}|[+-]\d{2}:?\d{2})")
 RE_ENTRY, RE_JUDGE = re.compile(u"entry:\\s*[\"\u201c]"), re.compile(r"\bJudge\s+([A-Z][a-z]{2,20})\b")
@@ -56,6 +51,10 @@ def _clean(url): return url.rstrip(".,);\"'")
 def _unq(s): return _norm(s).replace('"', "").replace("'", "")
 def _qhash(q): return hashlib.sha256(" ".join(_toks(q)).encode("utf-8")).hexdigest()[:16]
 def _grams(t, n=6): return set(tuple(t[i:i + n]) for i in range(max(0, len(t) - n + 1)))
+def _lead(name):
+    """The short-cite handle of a caption: the last distinctive word of the first party, which is how every later mention names it."""
+    w = [t for t in re.findall(r"[A-Za-z']{3,}", re.split(r"\s+v\.?\s+", name)[0]) if t.lower() not in STOPCAP]
+    return w[-1].lower() if w else ""
 def _ts(s):
     try: d = datetime.fromisoformat(str(s).strip().replace("Z", "+00:00"))
     except (ValueError, AttributeError): return None
@@ -188,13 +187,16 @@ class Ctx(object):
                 self._bodies.append((toks, idx))
                 if len(self._bodies) >= 60: break
         return self._bodies
+def _backed(x, text):
+    """True when the line carries what the ledger recorded: an accession, a docket number, a permalink docket id, or a ledgered URL."""
+    ids = [i.lower() for i in RE_ACC.findall(text) + RE_DOCKET.findall(text) + RE_DID.findall(text)]
+    return any(i in x.ids for i in ids) or any(u in text for u in x.urls)
 def c1_structure(x):
     if not x.fm: return x.bad("C1", 1, "no frontmatter block", "run lacuna template memo")
     for k in FM_KEYS:
         if not x.fm.get(k): x.bad("C1", 1, "frontmatter key missing: %s" % k, "add it")
     if x.fm.get("distribution") and not x.fm["distribution"].startswith("internal-only"):
-        x.bad("C1", x.fm_line.get("distribution", 1), "distribution must be internal-only",
-              "set distribution: internal-only")
+        x.bad("C1", x.fm_line.get("distribution", 1), "distribution must be internal-only", "set distribution: internal-only")
     gen = (x.fm.get("generated_by") or "").strip()
     if gen and not re.match(r"^lacuna@(?:[0-9a-f]{7,40}|v\d+(?:\.\d+){1,2})$", gen):
         x.bad("C1", x.fm_line.get("generated_by", 1), "generated_by %r names no build: lacuna@<git "
@@ -216,8 +218,7 @@ def c1_structure(x):
                           "must read every cited case.", ""]))
         x.note("C1", x.fm_end + 1, "citation caveat was missing and was inserted", "leave it")
     if FOOTER not in x.raw:
-        x.appends.append("\n\n---\n" + FOOTER + "\nrecommendation to buy or sell any security. "
-                         "Do not distribute or forward.\n")
+        x.appends.append("\n\n---\n" + FOOTER + "\nrecommendation to buy or sell any security. Do not distribute or forward.\n")
         x.note("C1", len(x.lines), "footer legend was missing and was appended", "leave it")
     if not x.cfg.get("courtlistener_token") and "Case-law verification: OFF" not in x.raw:
         x.inserts.append((x.fm_end + 1, ["Case-law verification: OFF (no CourtListener token)"]))
@@ -237,8 +238,7 @@ def c2_freshness(x):
         got = _ts(pat.match(x.lines[idx]).group(1))
         x.lines[idx] = "%s: %s" % (label, _iso(dt))
         if got is None or abs((got - dt).total_seconds()) > 60:
-            x.bad("C2", idx + 1, "%s: disagreed with the ledger by over 60 seconds" % label,
-                  "the verifier rewrote it from the ledger")
+            x.bad("C2", idx + 1, "%s: disagreed with the ledger by over 60 seconds" % label, "the verifier rewrote it from the ledger")
     now = _now()
     for e in rows:
         tool = (e.get("tool") or "").lower()
@@ -255,14 +255,13 @@ def c3_citations(x):
     if [c for c in cites if c not in cache]:
         res = x.net.cite_lookup(x.raw) if x.net else None
         if res is None:
-            # No token is a known-off state the banner announces, and still blocks unbacked case
-            # references. A reachability failure is infrastructure and blocks nothing.
+            # No token is the known-off state the banner announces, and still blocks unbacked case references. A
+            # reachability failure is infrastructure and blocks nothing.
             blind = bool(x.cfg.get("courtlistener_token"))
             x.infra.append("citation lookup unavailable, %d citations unchecked" % len(cites))
         else:
             for it in res:
-                cache[str(it.get("citation"))] = {"status": it.get("status"),
-                                                  "case_name": it.get("case_name")}
+                cache[str(it.get("citation"))] = {"status": it.get("status"), "case_name": it.get("case_name")}
             _save(cpath, cache)
     for cite in cites:
         line = next((i + 1 for i, ln in enumerate(x.lines) if cite in ln), 1)
@@ -273,19 +272,31 @@ def c3_citations(x):
             x.bad("C3", line, "citation %s is %s and sits outside %s" % (cite, what, REJECTED),
                   "move it to " + REJECTED + " or delete it")
         elif st == 300 and "ambiguous" not in x.lines[line - 1].lower():
-            x.bad("C3", line, "citation %s is ambiguous and is not labelled so" % cite,
-                  "label it ambiguous and name the candidates")
-    ok = set(str((cache.get(c) or {}).get("case_name") or "").lower() for c in cites
-             if (cache.get(c) or {}).get("status") == 200)
+            x.bad("C3", line, "citation %s is ambiguous and is not labelled so" % cite, "label it ambiguous and name the candidates")
+    ok = set(str((cache.get(c) or {}).get("case_name") or "").lower() for c in cites if (cache.get(c) or {}).get("status") == 200)
+    # Every case this desk could not resolve, keyed by the handle a later sentence would name it with. A reporter
+    # citation is unresolved unless the lookup came back 200, which covers one that was never submitted at all.
+    banned = dict((_norm(c), c) for c in cites if (cache.get(c) or {}).get("status") != 200)
     for line, text in ([] if blind else x.logical()):
-        if rej(line - 1) or x.inspan("Provenance", line - 1): continue
         for m in RE_CASE.finditer(text):
-            name, ids = m.group(0), [i.lower() for i in RE_ACC.findall(text) + RE_DOCKET.findall(text)]
-            if any(i in x.ids for i in ids) or any(u in text for u in x.urls): continue
-            if _norm(name) in " ".join(ok): continue
+            name = m.group(0)
+            if _backed(x, text) or _norm(name) in " ".join(ok): continue
+            if _lead(name): banned[_lead(name)] = name
+            if rej(line - 1) or x.inspan("Provenance", line - 1): continue
             x.bad("C3", line, "case reference %r outside %s is backed by no retrieval: no ledgered "
                   "docket, accession or URL on its line, and no citation on it resolved"
                   % (name, REJECTED), "move it to " + REJECTED + ", or cite what you retrieved")
+    # An unresolved case is barred from the asserted sections in EVERY phrasing, negative retrieval included. "A
+    # search for X returned 0 results" names the case as loudly as a positive claim, and a reader skimming
+    # ## Verified facts carries the name away as something this desk checked.
+    for name in ASSERTED:
+        for line, text in ([] if blind else x.logical(name)):
+            low = _norm(text)
+            hit = next((v for k, v in sorted(banned.items()) if re.search(r"\b%s\b" % re.escape(k), low)), None)
+            if hit:
+                x.bad("C3", line, "%r did not resolve, so it may not appear in ## %s in any phrasing, a "
+                      "search-outcome sentence included" % (hit, name), "move search-outcome records to "
+                      "## What was searched; move the unresolved citation to " + REJECTED)
     bad = set(c for c in cites if (cache.get(c) or {}).get("status") in (400, 404))
     for para, first in x.paragraphs():
         if rej(first - 1): continue
@@ -331,15 +342,13 @@ def c5_urls(x):
         row = x.lines[line - 1] if line - 1 < len(x.lines) else ""
         if url in x.urls: continue
         ids = [i.lower() for i in RE_ACC.findall(url) + RE_DOCKET.findall(url)]
-        ids += re.findall(r"/data/(\d{4,10})/", url) + re.findall(r"CIK(\d{10})", url)
+        ids += re.findall(r"/data/(\d{4,10})/", url) + re.findall(r"CIK(\d{10})", url) + RE_DID.findall(url)
         if _allowed(url):
             if not any(i.lower() in x.ids or i.lstrip("0") in stripped for i in ids):
-                x.bad("C5", line, "allowlisted URL %s carries no ledgered identifier" % url,
-                      "fetch it with lacuna so it is ledgered")
+                x.bad("C5", line, "allowlisted URL %s carries no ledgered identifier" % url, "fetch it with lacuna so it is ledgered")
             continue
         if x.inspan("Verified facts", line - 1):
-            x.bad("C5", line, "untrusted-host URL %s appears in ## Verified facts" % url,
-                  "move it out and tag it [web, verify]")
+            x.bad("C5", line, "untrusted-host URL %s appears in ## Verified facts" % url, "move it out and tag it [web, verify]")
         elif "[web, verify]" not in row:
             x.bad("C5", line, "untrusted-host URL %s is not tagged [web, verify]" % url,
                   "tag the line [web, verify] or remove the URL")
@@ -376,8 +385,7 @@ def c6_quotes(x):
                       % (score * 100, q[:70]), "quote the retrieved text exactly")
     for line, text in x.logical("Verified facts"):
         if not (RE_ATTRIB.search(text) and RE_SRC.search(text)): continue
-        ids = [i.lower() for i in RE_ACC.findall(text) + RE_DOCKET.findall(text)]
-        if not any(i in x.ids for i in ids) and not any(u in text for u in x.urls):
+        if not _backed(x, text):
             x.bad("C6", line, "attribution with no ledgered accession, docket or URL on the line: "
                   "%s" % re.sub(r"\s+", " ", text)[:80], "add the accession behind it")
     for _ in sorted(pending - present - matched):
@@ -385,8 +393,7 @@ def c6_quotes(x):
               "restore it with its retrieved source, or state the claim unquoted and cite it")
     x.pending_quotes = sorted((pending | failed) - matched)
 def _blocks(x, name):
-    """Blank-line-separated paragraphs of a section: (joined text, [(offset, line, text)]).
-    Wrapped-line merging stops at a list marker, so C7 pairs over the whole paragraph."""
+    """Blank-line paragraphs of a section: (text, [(offset, line, text)]). Merging stops at a list marker so C7 pairs over it."""
     out, cur, pos = [], [], 0
     for a, b in list(x.spans.get(name, ())) + [(0, 0)]:
         for i in list(range(a, min(b, len(x.lines)))) + [-1]:
@@ -400,16 +407,14 @@ def c7_confidence(x):
             for em in RE_EST.finditer(text):
                 line, row = next(((n, t) for p, n, t in reversed(parts) if p <= em.start()), (1, ""))
                 if re.match(r"^\s*-?\s*Reference class:", row): continue
-                gaps = [text[min(em.end(), c.end()):max(em.start(), c.start())]
-                        for c in RE_OUT.finditer(text)]
+                gaps = [text[min(em.end(), c.end()):max(em.start(), c.start())] for c in RE_OUT.finditer(text)]
                 if not any(len(g.split()) <= 15 for g in gaps): continue
                 tail, est = "\n".join(x.lines[line:line + 8]), em.group(0).strip()
                 miss = [l for l in CONF_LINES if l not in tail]
                 if miss: x.bad("C7", line, "estimate \"%s\" is missing: %s" % (est, ", ".join(miss)),
                                "add the missing lines under the estimate")
                 rc = next((l for l in tail.split("\n") if "Reference class:" in l), "")
-                if rc and NO_BASE not in rc and not (RE_TAG.search(rc)
-                                                     and any(u in rc for u in x.urls)):
+                if rc and NO_BASE not in rc and not (RE_TAG.search(rc) and any(u in rc for u in x.urls)):
                     x.bad("C7", line, "reference class has no ledgered source and is not labelled "
                           "%s" % NO_BASE, "cite a retrieved base rate or label it")
                 v = _value(est)
@@ -424,10 +429,8 @@ def c8_provenance(x):
     hits += [str(p).lower() for p in (x.cfg.get("restricted_parties") or [])
              if str(p).lower() and str(p).lower() in _norm(x.fm.get("subject", ""))]
     for h in hits:
-        _save(os.path.join(x.state, "restricted-hits.jsonl"),
-              {"ts": _iso(_now()), "memo": x.path, "name": h}, "a")
-        x.bad("C8", x.fm_line.get("subject", 1), "restricted name, escalate to compliance: %s" % h,
-              "stop work on this name")
+        _save(os.path.join(x.state, "restricted-hits.jsonl"), {"ts": _iso(_now()), "memo": x.path, "name": h}, "a")
+        x.bad("C8", x.fm_line.get("subject", 1), "restricted name, escalate to compliance: %s" % h, "stop work on this name")
     tainted = []
     for line, text in x.logical("Provenance"):
         if not text.strip().startswith("-"): continue
@@ -445,8 +448,7 @@ def c8_provenance(x):
             if cls == "nonpublic" and x.fm.get("contains_nonpublic", "").lower() != "true":
                 x.bad("C8", x.fm_line.get("contains_nonpublic", line), "a nonpublic provenance "
                       "item is present but contains_nonpublic is false", "set it true")
-    if (x.fm.get("contains_nonpublic", "").lower() == "true"
-            and "do not act" not in x.fm.get("distribution", "")):
+    if (x.fm.get("contains_nonpublic", "").lower() == "true" and "do not act" not in x.fm.get("distribution", "")):
         x.bad("C8", x.fm_line.get("distribution", 1), "contains_nonpublic: true requires "
               "distribution: internal-only, do not act", "set distribution: internal-only, do not act")
     guard = {}
@@ -484,8 +486,7 @@ def c10_searched(x):
     for e in x.ledger:
         argv = " ".join(str(a) for a in (e.get("argv") or []))
         if argv and _unq(argv) not in body:
-            x.bad("C10", line, "## What was searched omits a ledgered search: %s" % argv,
-                  "regenerate the block with lacuna searched")
+            x.bad("C10", line, "## What was searched omits a ledgered search: %s" % argv, "regenerate the block with lacuna searched")
 CHECKS = (c1_structure, c2_freshness, c3_citations, c4_dockets, c5_urls, c6_quotes,
           c7_confidence, c8_provenance, c9_catalysts, c10_searched)
 def _write(x, text):
@@ -517,8 +518,7 @@ def run_verify(memo_path, state_dir, config, net, blocking):
         with open(memo_path, encoding="utf-8") as fh: raw = fh.read()
     except OSError as exc:
         _clear(sentinel)
-        return {"findings": [], "exit_code": 0,
-                "infra_failures": ["cannot read %s: %s" % (memo_path, exc)]}
+        return {"findings": [], "exit_code": 0, "infra_failures": ["cannot read %s: %s" % (memo_path, exc)]}
     x = Ctx(memo_path, raw, state_dir, config, net)
     for fn in CHECKS:
         if time.time() - t0 > BUDGET_SECONDS:
@@ -535,8 +535,7 @@ def run_verify(memo_path, state_dir, config, net, blocking):
     store = _load(vpath, {})
     if not isinstance(store, dict): store = {}
     prev = store.get(memo_path) or {}
-    sig = hashlib.sha256("|".join(sorted(f["check_id"] + ":" + f["message"]
-                                         for f in blocks)).encode("utf-8")).hexdigest()[:16]
+    sig = hashlib.sha256("|".join(sorted(f["check_id"] + ":" + f["message"] for f in blocks)).encode("utf-8")).hexdigest()[:16]
     attempts = (prev.get("attempts", 0) + 1) if prev.get("sig") == sig else 1
     if blocks and attempts > MAX_BLOCKING_ATTEMPTS:
         if prev.get("attempts", 0) <= MAX_BLOCKING_ATTEMPTS: text = _write_failure(x, text, blocks)
