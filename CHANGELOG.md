@@ -4,11 +4,107 @@ All notable changes to the `lacuna` plugin are recorded here. The format
 follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-The first line under each version heading is a one-sentence summary. The
-SessionStart hook reads that line and shows it once when the installed version
-changes, so keep it short and keep it plain.
+The first line under each version heading is a one-sentence summary. Keep it
+short and keep it plain.
 
-## [Unreleased]
+## [0.2.0] - 2026-07-30
+
+The expressive edition: the enforcement machinery is gone and the same discipline
+now lives in skills the model reads and the analyst directs.
+
+### Changed
+
+- **The whole philosophy.** 0.1 held the line with machinery: hooks on every tool
+  call, deny rules over the shell, site restrictions, and a Python verifier that
+  blocked a memo until ten deterministic checks passed. 0.2 asks for the same
+  standards in prose and trusts the model to follow them, because a desk that
+  fights its analyst teaches nothing and nobody can direct what they cannot see.
+  Verification is now a dial sized to the stakes rather than a wall in front of
+  every memo.
+- Legal and finance practices are adapted from Anthropic's open
+  `claude-for-legal` and `financial-services` repositories, each vendored file
+  carrying a provenance note and the upstream Apache-2.0 text copied into
+  `licenses/`.
+- Court data now arrives through the hosted CourtListener MCP server rather than
+  a bundled Python client and a pasted API token. First use opens a browser
+  sign-in, it costs nothing, and there is no key to store.
+- SEC access is documented as keyless recipes over EDGAR full-text search and the
+  `data.sec.gov` company APIs.
+- `templates/memo.md` is a short optional shape with a header saying so, in place
+  of the fourteen-section form the verifier used to police.
+- `README.md` is rewritten for the new shape, with a credits and licences section
+  naming every upstream source.
+- `.gitignore` keeps `cases/` and drops the entries for machinery that no longer
+  exists.
+
+### Added
+
+- `/lacuna:start`, a five-minute orientation: what the skills do, how to ask for
+  things without learning any syntax, permission modes including how to turn the
+  approval prompts down once the flow is trusted, when plan mode is worth it,
+  that the memory files are plain text the analyst owns, where case files live,
+  and how to connect the court data.
+- `/lacuna:interview`, a conversational ten-minute interview on working style,
+  covering what counts as verified, trusted and distrusted sources, depth
+  calibration, memo length and hedging taste, standing interests, pet peeves, and
+  how to express probabilities. It writes the result into a fenced section of the
+  global `~/.claude/CLAUDE.md`, replacing only its own section on a re-run and
+  never touching anything outside the markers, and offers a project-level copy.
+- `skills/plan-execute-verify`, the severity ladder as practice: quick lookup,
+  standard research, and high-stakes work each get a stated rung with matching
+  planning and verification, including when to escalate mid-flight.
+- `skills/verification-habits`, adapted with attribution from the
+  `verification-before-completion` skill in obra/superpowers (MIT), tuned to
+  legal and financial research: evidence before claims, fact against inference
+  against speculation, timestamps on retrievals, unlooked-up citations labelled
+  unverified, quotes limited to what the document says, and coverage limits
+  stated out loud.
+- `skills/token-efficiency`, on model routing, subagents for noisy searches,
+  backgrounding long fetches, not re-reading what is established, and keeping the
+  memo as the durable artifact.
+- `docs/useful-things.md`, a pointer page covering CourtListener and the
+  commercial state-court option, both Anthropic source repositories, the
+  superpowers plugin, the SEC endpoints, the RECAP archive, eyecite, and the
+  Claude Code documentation worth reading.
+- `agents/docket-watcher`, adapted with attribution from the same agent in
+  `claude-for-legal`: a subagent that sweeps every tracked case for entries filed
+  since the last check, flags posture changes and dated events as leads, and
+  writes a report under `cases/reports/`. Documented in `README.md` and named in
+  the `/lacuna:start` tour, so it is discoverable without reading the tree.
+- The `cases/` workspace is now introduced properly, in `README.md` and in the
+  `/lacuna:start` tour: what `cases/<case-id>/` holds, that Claude creates it on
+  first use rather than the analyst scaffolding it, and why `.gitignore` keeps it
+  out of git. The three files that read it also create it when it is missing.
+- A precedence rule shared between `plan-execute-verify` and
+  `verification-habits`, stated identically in both, so the rung named by the
+  first decides how much of the second applies instead of the two skills
+  contradicting each other when both load in one turn.
+- `licenses/`, holding the upstream licence text for every vendored source. Both
+  Apache-2.0 upstreams ship identical licence text and neither ships a NOTICE
+  file, so `licenses/APACHE-2.0.txt` is one copy covering both.
+- `docs/releasing.md`, describing both `claude plugin validate` targets and what
+  each one does and does not check, plus the frontmatter, version-agreement,
+  style, and headless-load checks to run before tagging.
+
+### Removed
+
+- All hooks, including the SessionStart banner and the tool-call gates.
+- All permission deny rules and site restrictions.
+- The `bin/lacuna` client and `bin/lacuna_verify.py` verifier, the ten
+  deterministic memo checks, the retrieval ledger, and the local `.lacuna/`
+  state directory that fed them.
+- `/lacuna:setup`, `/lacuna:research`, and `/lacuna:verify`, along with the
+  `case-researcher` agent and the eval harness that scored them.
+- Nothing is lost: all of it remains in git history at commit `e66db93`, if the
+  argument for enforcement ever wins. That commit rather than the `v0.1.0` tag,
+  because the tag was cut before the review round and the three commits after it
+  carry the fixes listed below.
+
+## [Superseded, unreleased against 0.1]
+
+The entries below fixed the 0.1 enforcement machinery and never shipped in a
+release. 0.2.0 removes that machinery, so they are kept as a record of what was
+learned rather than as a description of current behaviour.
 
 ### Fixed
 

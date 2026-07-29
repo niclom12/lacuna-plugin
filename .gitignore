@@ -1,13 +1,6 @@
-# Python bytecode
-__pycache__/
-*.pyc
-
-# Local desk state written by lacuna into a working directory
-.lacuna/
-
 # Case workspace: memos are work product and may be privileged.
-# Tracking them in git is an explicit opt-in during /lacuna:setup.
+# Tracking them in git is a deliberate opt-in.
 cases/
 
-# Eval output
-eval/results/
+# Local desk state left behind by 0.1 installs. No 0.2 code writes here.
+.lacuna/
