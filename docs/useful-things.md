@@ -62,7 +62,10 @@ carries a provenance comment at the top saying exactly what changed. The wider
 repo is aimed at people practising law rather than trading around it: drafting,
 review, discovery, and matter-management workflows. Browse its `skills/`
 directories for the current list, since it moves. The skills are plain markdown,
-so anything useful can be dropped into `~/.claude/skills/` by hand.
+so anything useful can be lifted by hand. In Claude Code, drop a skill folder
+into `~/.claude/skills/`. In Cowork, add it to a plugin you own and reinstall
+that plugin from Customize > Plugins, since there is no local skills folder
+to copy into.
 
 ## anthropics/financial-services
 

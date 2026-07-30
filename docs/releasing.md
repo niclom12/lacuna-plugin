@@ -157,8 +157,11 @@ Three rules to check the hits against:
 - The portability sweep's hits are each read, and each is branched rather than
   assuming one environment.
 - Nothing in `templates/`, `docs/`, or the skills refers to a command that no
-  longer exists. `grep -rn '/lacuna:' .` should name only the commands present
-  in `commands/`.
+  longer exists. Check with `grep -rn '/lacuna:' . --exclude-dir=.git
+  --exclude=CHANGELOG.md`, which should name only the commands present in
+  `commands/` plus the skills, which mirror as `/lacuna:<skill>` entries.
+  `CHANGELOG.md` is excluded on purpose: it names removed commands such as
+  `/lacuna:setup` in its historical entries, and those references are correct.
 - Nothing refers to a plugin file by a bare relative path. Commands run with the
   user's workspace as the working directory, so a path into this plugin has to go
   through `${CLAUDE_PLUGIN_ROOT}`, which Claude Code substitutes in command and
