@@ -5,7 +5,17 @@ at the top. The only parts worth keeping in every memo are the three that stop a
 reader mistaking a guess for a fact: what was verified, what was inferred, and
 what was searched without result.
 
-Delete this comment when you copy the file.
+The finished memo belongs at `cases/<case-id>/memo.md` in the workspace you are
+working in, whatever created it.
+
+A memo is work product and may be privileged, and nothing in this plugin ignores
+`cases/` in that workspace. So when `cases/` is created for the first time, check
+whether the workspace is a git repository (in Claude Code, `git rev-parse
+--is-inside-work-tree` and `git check-ignore -q cases`; in Cowork, look for a
+`.git` directory or a `.gitignore` beside it) and offer to add `cases/` to its
+`.gitignore`. Report what happened rather than assuming the folder is protected.
+
+Delete this comment when you start a memo from this shape.
 -->
 
 ---

@@ -10,7 +10,15 @@ question wastes the analyst's time and yours; leaving it at minimum for a
 question with money on it is how a bad number reaches a decision. So the first
 move on any substantive task is to say out loud which rung it sits on, and why.
 
-State it in one line before starting. The analyst can move it.
+**Read the desk profile first.** If `desk-profile.md` is in the working folder,
+open it and follow it: it carries what counts as verified for this analyst,
+distrusted sources, memo shape and hedging taste, how probabilities get
+expressed, and pet peeves. In Claude Code the same profile sits in a fenced
+`lacuna desk profile` block in `~/.claude/CLAUDE.md` and loads by itself. In
+Cowork nothing loads it for you, so opening the file is what makes it apply.
+`/lacuna:interview` is what writes it.
+
+State the rung in one line before starting. The analyst can move it.
 
 > Reading this as a quick lookup: one figure, low stakes, I will answer
 > directly and sanity-check it. Say the word if it deserves more.
@@ -67,15 +75,35 @@ being confidently wrong is expensive.
 - **Execute:** the agreed plan. Flag material departures as they happen.
 - **Verify, twice over:**
   1. The full checking pass from rung 2.
-  2. An **independent re-derivation**. Dispatch a fresh subagent with no view
-     of your reasoning. Give it the question and the sources, ask it to derive
-     the two or three load-bearing claims itself, and compare. Where it
-     disagrees, or where it cannot get there from the sources you had, that is
-     the finding. Report the disagreement even when you still think you were
-     right.
+  2. An **independent re-derivation** of the two or three load-bearing claims,
+     done by something that has not seen your reasoning. A fresh context is the
+     whole point: anything that has read your working will agree with your
+     working. That rules out doing this yourself in the conversation you are
+     already in, so there are two forms and they are not equivalent.
 
-  A fresh context is the point. An agent that has read your working will
-  agree with your working.
+     - **Where a subagent is available** (Claude Code, and anywhere else a
+       separate agent can be dispatched), send a fresh one with no view of your
+       working. Give it the question and the sources, ask it to derive the
+       load-bearing claims itself, and compare. You can complete this yourself,
+       so the rung-3 verification is done when you report the comparison.
+     - **Where no subagent is available** (Cowork today, and any session with no
+       way to dispatch one), you cannot complete this and must not claim you
+       did. You cannot open a fresh conversation; only the analyst can. So hand
+       it over. Write a **re-derivation brief** the analyst can paste into a new
+       conversation with nothing added:
+       - the two or three load-bearing claims restated as open questions
+       - the sources, as links or quoted extracts
+       - none of your reasoning, and none of your answers
+
+       Then say plainly that the independent check is **OUTSTANDING**, name what
+       rides on it, and ask the analyst to run the brief and tell you what came
+       back. When they report back, compare and say whether it matched. Until
+       they do, the memo says the load-bearing claims have had the rung-2
+       checking pass and no independent re-derivation.
+
+     Either way, where the second pass disagrees, or cannot get there from the
+     sources you had, that disagreement is the finding. Report it even when you
+     still think you were right.
 
 ## Precedence: rungs and habits
 

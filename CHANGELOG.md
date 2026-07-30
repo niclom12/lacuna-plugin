@@ -7,6 +7,135 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The first line under each version heading is a one-sentence summary. Keep it
 short and keep it plain.
 
+## [0.3.0] - 2026-07-30
+
+The dual-target port: the same desk now runs in Claude Cowork and in Claude Code,
+with every instruction that assumed a terminal, a `CLAUDE.md`, or a subagent
+branching explicitly instead.
+
+### Changed
+
+- **The target.** 0.2 was a Claude Code plugin. 0.3 is the same bundle running in
+  both Claude Cowork and Claude Code, which costs nothing structurally because
+  Cowork plugins use the identical layout (`.claude-plugin/plugin.json`,
+  `.mcp.json`, `commands/`, `skills/`) and this bundle has been markdown and JSON
+  with no binaries since 0.2.
+- **Portability is now a rule rather than an accident.** No instruction has a
+  terminal command as its only path. Where an action is available by more than one
+  route the skill describes the action first ("fetch this address") and then gives
+  the concrete per-environment form, labelled in plain language as "In Cowork" and
+  "In Claude Code".
+- `README.md` leads with the fact that it runs in both, gives the two install
+  paths side by side (Cowork's **Customize > Plugins**, syncing the marketplace
+  from the repository's git URL or installing from the plugin directory; Claude
+  Code's `/plugin marketplace add` and `/plugin install`), and adds a
+  "What differs between Cowork and Claude Code" section covering the three real
+  differences: SEC fetches, where the desk profile lives, and the docket sweep.
+  It also records that Cowork plugins currently save locally to the machine they
+  are installed on, with org-wide sharing coming later.
+- The desk profile is now described by what it is rather than by the file that
+  held it. Claude Code keeps it in a fenced section of `~/.claude/CLAUDE.md`.
+  Cowork has no `CLAUDE.md` and no `~/.claude`, so the profile lives in a
+  `desk-profile.md` in the workspace alongside Claude's own Memory profile, which
+  the analyst can read and edit at profile icon > Settings > Capabilities > Memory.
+- `plan-execute-verify` rung 3 states both forms of the independent
+  re-derivation and no longer treats them as equivalent. Where a subagent is
+  available, a fresh one derives the load-bearing claims and the model completes
+  the check itself. Where none is available, the model cannot open a fresh
+  conversation and must not claim it did: it writes a self-contained re-derivation
+  brief (claims restated as open questions, the sources, none of its reasoning),
+  marks the independent check OUTSTANDING, and asks the analyst to run it and
+  report back. The precedence rule shared with `verification-habits` is unchanged
+  and still stated identically in both files.
+- The desk profile is now actually read. Every skill that writes analyst-facing
+  output (`plan-execute-verify`, `verification-habits`, `chronology`,
+  `matter-briefing`, `earnings-analysis`, `equity-research`, `docket-sweep`) opens
+  `desk-profile.md` from the working folder when it is there and follows it. Cowork
+  auto-loads no file, so this is what makes the Cowork half of the interview apply
+  at all, and the copy in `README.md`, `commands/start.md`, and
+  `commands/interview.md` now says that rather than implying the file is picked up
+  for you.
+- Environment detection in both commands makes a shell or Bash tool decisive for
+  Claude Code on its own, with `~/.claude` as confirmation rather than a second
+  required condition. A read of `~/.claude/CLAUDE.md` that was refused or left
+  unapproved is distinguished from a path that is absent, so a denied permission
+  prompt no longer routes a Claude Code user down the Cowork branch.
+- `skills/edgar-research` carries a measured table of how the SEC hosts treat the
+  `User-Agent` header, replacing a model of it that was inverted. All hosts refuse
+  a request with no header; `data.sec.gov` and `efts.sec.gov` accept any non-empty
+  one; `www.sec.gov`, which serves the filing documents, the ticker mapping, and
+  `cgi-bin/browse-edgar`, refuses a browser-style header and answers only when the
+  header carries an address. The Cowork consequence is stated plainly instead of
+  implying a working path: where a fetch tool cannot set the header, filing
+  documents are unavailable and the honest output is to hand over the URL and ask
+  the analyst to paste the text. The SEC contact address is kept as the published
+  condition of use rather than presented as server behaviour.
+- `commands/start.md` section 3A describes EDGAR fetches as arriving by `WebFetch`
+  by default and by `curl` where a shell is the better route, so the permission
+  rule set it prints covers both, and it no longer teaches that every fetch is a
+  shell command.
+- `commands/start.md` describes connector enablement by the outcome to look for
+  (the CourtListener tools present in the tool list, one browser sign-in on first
+  use) with the panel path given as a likely location, and adds the recovery line
+  that `docket-research` already carries: say so plainly and fall back to the open
+  web with `[web, verify]` tags.
+- `commands/interview.md` tells the analyst that notes kept across re-runs belong
+  outside the markers, and shows the current block content and asks before
+  replacing it on a re-run. The SEC contact address is still collected in both
+  branches, with the honest reason attached: the header can be set exactly in
+  Claude Code and a Cowork fetch tool usually cannot apply it.
+- `README.md` leads the Cowork install with syncing the marketplace from the
+  repository's git URL as the only route, and says in one line that the plugin is
+  not in the public directory, matching `docs/useful-things.md`.
+- `README.md` no longer claims this repository's `.gitignore` protects the
+  analyst's `cases/` folder, because it governs this repository only. The skills
+  that create `cases/` (`chronology`, `matter-briefing`, `docket-sweep`, and the
+  `templates/memo.md` header) now check whether the workspace is a git repository
+  on first creation and offer to add `cases/` to its `.gitignore`, reporting what
+  they did.
+- `token-efficiency` no longer assumes subagents, background execution, or a
+  choosable model. Noisy retrieval goes into a subagent where one exists and into
+  a file on disk where one does not, with the same underlying rule in both cases:
+  raw retrieval belongs in a file and the conversation holds conclusions with
+  their sources. Slow fetches overlap with thinking whether or not there is a
+  background runner. The model-routing table now reads as guidance on how much
+  deliberation a task deserves wherever the model is not the analyst's to pick.
+- The docket sweep method moved out of `agents/docket-watcher.md` and into a
+  skill. Skills are documented as bundleable in Cowork and `agents/` is not, so a
+  method that lived only in an agent file was unreachable there while three places
+  claimed otherwise. `agents/docket-watcher.md` is now a thin subagent wrapper that
+  loads the skill and returns its report, and it buys exactly one thing: a separate
+  context window in Claude Code. The Apache-2.0 provenance header travels with the
+  method and is present in both files.
+- `chronology`, `matter-briefing`, and `docket-sweep` say "workspace" where they
+  used to say "project", and each names creating `cases/` when it is missing
+  rather than assuming a local checkout.
+- `templates/memo.md` says where the finished memo belongs and drops the
+  assumption that it gets there by copying a file out of the plugin directory.
+- Both manifests describe the plugin as running in Cowork and Claude Code.
+
+### Added
+
+- `skills/docket-sweep`, the portfolio docket sweep as a skill: the sweep list,
+  the skip-closed-cases rule, the reading discipline for orders, the
+  `[computed, verify]` marking of derived dates, the NEEDS A LOOK / DATED AHEAD /
+  POSTURE CHANGES / QUIET / OUTSIDE COVERAGE report template, and the report path
+  under `cases/reports/`. It carries the Apache-2.0 provenance note from
+  `anthropics/claude-for-legal`, since that is where the method came from, and it
+  loads in Cowork and in Claude Code alike. Ten skills now, up from nine.
+- `docs/useful-things.md` gains two pointers: the Cowork plugin directory at
+  <https://claude.com/plugins>, and `anthropics/knowledge-work-plugins`, the
+  Anthropic collection built for Cowork and compatible with Claude Code, which is
+  the reference for what a Cowork plugin is allowed to contain. Everything already
+  there is kept, with the documentation section noting which pages describe a
+  Claude Code path and what the Cowork equivalent is.
+- `docs/releasing.md` gains a portability sweep to run before tagging, checking
+  that no shipped instruction leaves a terminal command as the only path and that
+  every `CLAUDE.md` reference is branched. The version-agreement check is
+  unchanged, because 0.3 adds no new versioned file: `.claude-plugin/plugin.json`,
+  `.claude-plugin/marketplace.json`, and the top `CHANGELOG.md` heading are still
+  the complete set, and the check now says so.
+
 ## [0.2.0] - 2026-07-30
 
 The expressive edition: the enforcement machinery is gone and the same discipline

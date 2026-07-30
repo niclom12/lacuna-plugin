@@ -1,6 +1,6 @@
 ---
 name: earnings-analysis
-description: "Use when asked for an earnings update, a post-earnings note, a quick take on a quarter, what changed in the new 10-Q, or how a result affects an existing view. Reads a quarterly result as a tradeable event for a company the desk already follows. Covers checking that you have the actual latest quarter rather than a remembered one, leading with the beat or miss and quantifying it, reading guidance changes, and the litigation reads that only a fresh quarterly filing gives you: how the contingencies note moved since last quarter, new matters appearing in Item 3, restatement and non-reliance signals, and auditor changes."
+description: "Use when asked for an earnings update, a post-earnings note, a quick take on a quarter, what changed in the new 10-Q, or how a result affects an existing view. Reads a quarterly result as a tradeable event for a company the desk already follows. Covers checking that you have the actual latest quarter rather than a remembered one, leading with the beat or miss and quantifying it, reading guidance changes, and the litigation reads that only a fresh quarterly filing gives you: how the contingencies note moved since last quarter, new matters appearing in Item 3, restatement and non-reliance signals, and auditor changes. Every filing it needs comes through a plain fetch, so it works in Cowork and in Claude Code alike."
 ---
 
 <!-- Adapted for lacuna from anthropics/financial-services (Apache-2.0),
@@ -18,7 +18,17 @@ moves the price, and it forces the company to restate its legal exposure in writ
 second is usually the more valuable half and it is the half most notes skip.
 
 Short note, markdown, published while it still matters. Assume the reader already knows what
-the company does.
+the company does. Write the file into the working folder beside the rest of the matter's
+material, which works the same way in Cowork and in Claude Code.
+
+Everything this note needs arrives through a fetch. Nothing here requires a terminal.
+
+**Read the desk profile first.** If `desk-profile.md` is in the working folder, open it and
+follow it: it carries what counts as verified for this analyst, distrusted sources, note length
+and hedging taste, how probabilities get expressed, and pet peeves. In Claude Code the same
+profile sits in a fenced `lacuna desk profile` block in `~/.claude/CLAUDE.md` and loads by
+itself. In Cowork nothing loads it for you, so opening the file is what makes it apply.
+`/lacuna:interview` is what writes it.
 
 ## Before anything else, confirm the quarter
 
@@ -27,10 +37,15 @@ and a confident writeup of last year's results is worse than no writeup.
 
 1. Note today's date explicitly.
 2. Pull the filings list and find the newest 10-Q or 10-K, and the 8-K that carried the
-   release. The `edgar-research` skill has the recipe.
+   release. The `edgar-research` skill has the recipe, Recipe 2, and it gives both a
+   fetch-tool form that works anywhere and a terminal form that is Claude Code only. Use
+   whichever your environment offers.
 3. Check the filing date against today. If the newest result is months old, the company has
    not reported yet and there is no note to write.
 4. Write the filing date and accession number into the note before writing anything else.
+5. If the filings list could not be retrieved at all, stop and say so. A quarter you could
+   not confirm is not a quarter you can write about, and "the submissions endpoint was
+   unreachable this session" is the honest version of that.
 
 ## Lead with the result
 
@@ -108,6 +123,8 @@ reviewed rather than characterising what management said on it.
 ## What this note never contains
 
 - A quarter you did not fetch, or a metric from a remembered version of the filing.
+- A figure attributed to a filing whose fetch was refused. A blocked endpoint gets named as
+  blocked.
 - A consensus number with no licensed source behind it.
 - A beat or a miss with no denominator, so the reader cannot tell whether 3% or 30% moved.
 - Two pages explaining what the company does. That belongs in the research note.

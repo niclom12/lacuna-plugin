@@ -23,19 +23,30 @@ equally reliable: an event that never happened, sitting in a clean table between
 two real ones, looking exactly as credible. Everything below exists to keep that
 event out, or failing that, to keep it labelled.
 
+**Read the desk profile first.** If `desk-profile.md` is in the working folder,
+open it and follow it: it carries what counts as verified for this analyst,
+distrusted sources, standing interests, and pet peeves, all of which change what
+gets tagged `key` and how the output reads. In Claude Code the same profile sits
+in a fenced `lacuna desk profile` block in `~/.claude/CLAUDE.md` and loads by
+itself. In Cowork nothing loads it for you, so opening the file is what makes it
+apply. `/lacuna:interview` is what writes it.
+
 ## Sources, in the order to try them
 
 1. **What the analyst hands you this session.** Paths, pasted docket text, PDFs,
    filing excerpts, links. Highest confidence, because a human chose it.
-2. **The case workspace.** `cases/<case-id>/` in the current project, for an
-   existing memo, a prior chronology, and any notes already gathered. If
-   `cases/` does not exist yet, create it.
+2. **The case workspace.** `cases/<case-id>/` in the workspace this session is
+   running in, for an existing memo, a prior chronology, and any notes already
+   gathered. If `cases/` does not exist yet, create it.
 3. **The CourtListener MCP tools.** Docket entries with filed dates, opinions
    with decision dates, and the docket sheet header for the procedural spine.
-   This is the strong default for court events.
+   This is the strong default for court events, and it is the same connector in
+   every environment.
 4. **SEC filings.** 8-K items, the 10-K legal proceedings item, and the
    contingencies note carry dated litigation events with the company's own
-   characterisation attached.
+   characterisation attached. Read them by whatever route this session has: a
+   direct fetch of the EDGAR address is enough, and `edgar-research` carries the
+   per-environment detail.
 5. **The open web.** News, regulator press rooms, court sites, company IR pages.
    Fine to use, and every event taken from it carries a `[web, verify]` tag.
 
@@ -123,7 +134,19 @@ analyst decides whether to accept weaker sources.
 
 ## Output
 
-Write to `cases/<case-id>/chronology.md`.
+Write to `cases/<case-id>/chronology.md` in the current workspace, creating the
+folder if it is not there.
+
+**When you create `cases/` for the first time**, deal with the privilege question
+in the same breath. A chronology is work product and may be privileged, and
+nothing in this plugin ignores `cases/` in the analyst's workspace, so a routine
+commit would push it. Check whether the workspace is a git repository. **In Claude
+Code:** `git rev-parse --is-inside-work-tree` answers that, and
+`git check-ignore -q cases` says whether it is already ignored. **In Cowork:** look
+for a `.git` directory or a `.gitignore` in the working folder. If it is a git
+repository and `cases/` is not already ignored, offer to append `cases/` to its
+`.gitignore`, with the one-line reason. Report what you did either way, and never
+imply the folder is protected when it is not.
 
 ```markdown
 # Chronology: [case name]

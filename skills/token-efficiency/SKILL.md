@@ -1,6 +1,6 @@
 ---
 name: token-efficiency
-description: Use when a research session is long, search-heavy, or running slowly, and when choosing how to spend model capacity on a task. Covers routing planning to the strong model and routine execution to the mid model, pushing noisy searches into subagents so the main thread stays readable, backgrounding long fetches, avoiding re-reads of material already established, and treating the written memo as the durable artifact instead of chat scrollback.
+description: Use when a research session is long, search-heavy, or running slowly, and when choosing how much capacity to spend on a task. Covers matching deliberation to the work and routing the model where the model is yours to choose, keeping noisy retrieval out of the main thread with a subagent where one is available and a file on disk where one is not, overlapping slow fetches with thinking instead of waiting on them, avoiding re-reads of material already established, and treating the written memo as the durable artifact instead of chat scrollback.
 ---
 
 # Token efficiency
@@ -28,27 +28,39 @@ Reserve extended thinking for genuine ambiguity: conflicting sources, a
 holding that cuts both ways, a plan with real trade-offs. Do not spend it on
 retrieval.
 
-## Push noisy work into subagents
+Where the model is yours to choose (Claude Code lets you name one per task and
+per subagent), route it. Where it is not, the table still tells you how much
+deliberation a piece of work deserves, so read it as a guide to effort and skip
+the part about which model to pick.
+
+## Keep the noise out of the main thread
 
 Some tasks produce far more output than signal. Full-text searches with
 hundreds of hits, docket sweeps across many cases, scanning a long filing for
-one clause. Run those in a subagent and ask for the distilled result back.
+one clause. Do the reading somewhere the analyst does not have to scroll
+through, and bring back only the finding.
 
-The subagent reads the noise; the main thread receives the finding. Give it a
-tight brief: what to look for, what to return, what to ignore, and how long
-the answer should be. Ask for sources and timestamps in the return, since you
-cannot see what it saw.
+**Where subagents are available**, run those tasks in one. Give it a tight
+brief: what to look for, what to return, what to ignore, and how long the
+answer should be. Ask for sources and timestamps in the return, since you
+cannot see what it saw. This is also how parallelism gets cheap: four dockets,
+four subagents, one consolidated answer, and your main context holds four
+paragraphs rather than four hundred entries.
 
-This is also how parallelism gets cheap. Four dockets, four subagents, one
-consolidated answer, and your main context holds four paragraphs rather than
-four hundred entries.
+**Where they are not**, get the same effect by hand. Write the raw material to
+a file as you fetch it, then work from the extract rather than from the whole
+thing, and never paste a full result set into the conversation to look at it.
+The rule underneath both forms is the same: raw retrieval belongs in a file,
+and the conversation holds conclusions with their sources attached.
 
-## Background the long fetches
+## Do not sit and wait
 
-A large filing, a slow archive, a broad sweep: start it in the background and
-keep working on something that does not depend on it. Come back for the
-result. Waiting in the foreground for a two-minute download costs the analyst
-two minutes of nothing happening.
+A large filing, a slow archive, a broad sweep: order the work so waiting
+overlaps with thinking. Where fetches can be started in the background, start
+them and keep working on something that does not depend on them. Where they
+cannot, fire the slow independent fetches first and as a batch, then do the
+reasoning that does not need them while they land. Waiting in the foreground for
+a two-minute download costs the analyst two minutes of nothing happening.
 
 ## Do not re-read what is established
 
@@ -72,9 +84,13 @@ the file rather than in a longer message. Then later sessions read a short
 file instead of reconstructing a long conversation, and the analyst has
 something to send to a lawyer.
 
-Same principle for standing preferences: they belong in `CLAUDE.md` where every
-session sees them, rather than being re-explained each morning. `/lacuna:interview`
-exists to put them there.
+Same principle for standing preferences: they belong somewhere every session
+sees them, rather than being re-explained each morning. In Claude Code that is
+`~/.claude/CLAUDE.md`, the global context file read at the start of every
+session. In Cowork there is no `CLAUDE.md`, so it is the Memory profile
+(profile icon > Settings > Capabilities > Memory) together with the
+`desk-profile.md` kept in the workspace. `/lacuna:interview` exists to put them
+in whichever of those applies.
 
 ## Signs the budget is being wasted
 
@@ -82,5 +98,6 @@ exists to put them there.
 - The same document fetched three times in one session.
 - Long recaps of what was just done, addressed to nobody.
 - Findings that exist only in chat messages an hour old.
-- The strong model extracting dates from a docket.
-- The cheap model deciding whether a thesis holds.
+- Deep deliberation spent on extracting dates from a docket.
+- A snap answer deciding whether a thesis holds.
+- A preference explained again that a profile could have carried.

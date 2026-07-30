@@ -5,8 +5,8 @@
     "url": "https://github.com/niclom12/lacuna-plugin"
   },
   "metadata": {
-    "description": "Litigation-driven research tooling for Claude Code.",
-    "version": "0.2.0"
+    "description": "Litigation-driven research tooling for Claude Cowork and Claude Code.",
+    "version": "0.3.0"
   },
   "plugins": [
     {

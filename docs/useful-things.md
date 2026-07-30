@@ -21,6 +21,35 @@ without telling you whether it is still good law. For state trial courts there i
 be the thing to add if a case you care about turns out to live in a county
 superior court. Nothing in this plugin talks to Trellis today.
 
+## The Cowork plugin directory
+
+<https://claude.com/plugins>. The browsable directory of plugins for Claude
+Cowork, and the same list you see from **Customize > Plugins > Browse plugins**
+inside Cowork itself. Worth a look for two reasons. It shows what other people
+have decided is worth bundling, which is a fast education in what a plugin is
+good for, and it is where you install anything you did not write yourself. This
+plugin is not in the directory: it installs by pointing Cowork at this
+repository's git URL, which syncs the marketplace manifest at
+`.claude-plugin/marketplace.json`. One thing to know before you rely on a
+plugin here: plugins currently save locally to the machine you install them on,
+with org-wide sharing coming later, so a colleague installs their own copy
+rather than picking up yours.
+
+## anthropics/knowledge-work-plugins
+
+<https://github.com/anthropics/knowledge-work-plugins>. Anthropic's own
+collection of plugins built for Claude Cowork, which its README notes are also
+compatible with Claude Code. This is the most useful reference in this file for
+anyone extending lacuna, because it is the working answer to "what is a Cowork
+plugin allowed to be". The answer turns out to be modest: markdown and JSON, no
+code, no infrastructure, no build step. Skills, slash commands, connector
+declarations in `.mcp.json`, and sub-agents, in the same directory layout Claude
+Code uses. Read one of its plugins end to end before writing your own, and note
+how much of the value sits in carefully written prose rather than in machinery.
+The plugins themselves cover general knowledge work (documents, decks, research
+workflows) rather than anything litigation-specific, so they complement this desk
+instead of overlapping with it.
+
 ## anthropics/claude-for-legal
 
 <https://github.com/anthropics/claude-for-legal>, Apache-2.0. Anthropic's open
@@ -96,14 +125,26 @@ tool that turns prose into a list of citations you can then resolve against
 CourtListener one by one. It is the programmatic version of what
 `verification-habits` asks for by hand.
 
-## Claude Code documentation
+## Documentation worth reading
 
-Three pages worth reading, in this order. Skills, at
+Three Claude Code pages, in this order. Skills, at
 <https://docs.claude.com/en/docs/claude-code/skills>, explains the format every
-practice file in this plugin uses, and how Claude decides to load one. Memory,
+practice file in this plugin uses, and how Claude decides to load one. That
+format is the same one Cowork reads, so this page is worth reading whichever
+environment you work in. Memory,
 at <https://docs.claude.com/en/docs/claude-code/memory>, explains `CLAUDE.md`
 and the difference between the global file and a project file. Plugins, at
 <https://docs.claude.com/en/docs/claude-code/plugins>, explains how a bundle
 like this one is put together and how to make your own. If you only read one,
-read the memory page, because that file is the highest-leverage thing on this
-desk that you control directly.
+read the memory page, because a durable profile is the highest-leverage thing on
+this desk that you control directly.
+
+The memory page describes a Claude Code path specifically. Cowork has no
+`CLAUDE.md` file and no `~/.claude` directory, and its equivalent is Claude's own
+Memory profile, a picture of how you work that Claude distils from your
+conversations. You can read it, correct it, and delete from it at **profile icon
+> Settings > Capabilities > Memory**. Reading what it has written about you after
+a week of real work is instructive, and it is where a standing preference belongs
+in Cowork. `/lacuna:interview` also writes a `desk-profile.md` into your
+workspace, which is a file you own outright and can edit with no interpretation
+in between.

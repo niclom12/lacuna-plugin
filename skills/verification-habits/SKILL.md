@@ -20,6 +20,14 @@ number you are very confident you remember. Confidence is not evidence. A
 plausible number is the most expensive kind of wrong, because nobody
 double-checks the ones that look right.
 
+**Read the desk profile first.** If `desk-profile.md` is in the working folder,
+open it and follow it: it carries what counts as verified for this analyst,
+distrusted sources, memo shape and hedging taste, how probabilities get
+expressed, and pet peeves. In Claude Code the same profile sits in a fenced
+`lacuna desk profile` block in `~/.claude/CLAUDE.md` and loads by itself. In
+Cowork nothing loads it for you, so opening the file is what makes it apply.
+`/lacuna:interview` is what writes it.
+
 ## Precedence: rungs and habits
 
 The rung that `plan-execute-verify` names decides how much of

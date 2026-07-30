@@ -23,6 +23,16 @@ anything.
 
 ## Load
 
+**The desk profile first.** If `desk-profile.md` is in the working folder, open it
+and follow it: it carries what counts as verified for this analyst, distrusted
+sources, briefing length and hedging taste, how probabilities get expressed, and
+pet peeves. In Claude Code the same profile sits in a fenced `lacuna desk profile`
+block in `~/.claude/CLAUDE.md` and loads by itself. In Cowork nothing loads it for
+you, so opening the file is what makes it apply. `/lacuna:interview` is what
+writes it.
+
+Then the case:
+
 - `cases/<case-id>/memo.md`: the thesis, the verified facts, the catalyst
   calendar, what was already rejected as unverified
 - `cases/<case-id>/chronology.md`: the event spine, if one has been built
@@ -30,9 +40,20 @@ anything.
 - The docket itself, via the CourtListener MCP tools, when the file is older than
   the case is moving (see Staleness)
 
-`cases/` sits in whatever project the session is running in, and if it does not
+`cases/` sits in whatever workspace the session is running in, and if it does not
 exist yet, create it. A first briefing on a desk with no case folder is a normal
 situation rather than an error.
+
+**When you create `cases/` for the first time**, deal with the privilege question
+in the same breath. Case material is work product and may be privileged, and
+nothing in this plugin ignores `cases/` in the analyst's workspace, so a routine
+commit would push it. Check whether the workspace is a git repository. **In Claude
+Code:** `git rev-parse --is-inside-work-tree` answers that, and
+`git check-ignore -q cases` says whether it is already ignored. **In Cowork:** look
+for a `.git` directory or a `.gitignore` in the working folder. If it is a git
+repository and `cases/` is not already ignored, offer to append `cases/` to its
+`.gitignore`, with the one-line reason. Report what you did either way, and never
+imply the folder is protected when it is not.
 
 If the case-id is missing or ambiguous, list what is in `cases/` and ask which
 one. Do not guess between two similar names; corporate captions repeat.

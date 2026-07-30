@@ -1,5 +1,10 @@
 # Releasing lacuna
 
+Every check on this page is a shell command, so releasing happens from a checkout
+in Claude Code or a terminal. That is a deliberate asymmetry: the shipped bundle
+has to work in Cowork and in Claude Code, and the release process only has to work
+where the repository lives.
+
 ## Two validate commands, both required
 
 `claude plugin validate` does something different depending on what you point it
@@ -85,6 +90,12 @@ have to agree: `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`
 (`metadata.version`), and the top heading in `CHANGELOG.md`. A mismatch has
 shipped from this repo once already.
 
+Those three are the complete set as of 0.3.0. The dual-target port added no new
+versioned file, and Cowork reads the same two manifests Claude Code does rather
+than a manifest of its own, so nothing else needs adding to the check below. If a
+fourth versioned file ever appears, extend this script rather than adding a second
+one, so there is one place that fails.
+
 ```bash
 python3 - <<'PY'
 import json, pathlib, re, sys
@@ -109,20 +120,55 @@ grep -rn "$(printf '\u2014')" . --exclude-dir=.git --exclude-dir=licenses \
   && echo 'EM-DASH FOUND' || echo 'clean'
 ```
 
+## Portability sweep
+
+The bundle ships to two environments, so before tagging, every shipped instruction
+has to work in both. This sweep does not decide anything; it lists the places worth
+reading with that question in mind. Each hit is either already branched ("In
+Cowork: ... In Claude Code: ...") or is a bug.
+
+```bash
+echo '--- shell fences in shipped instructions (each needs a non-terminal path too)'
+grep -rn '^```bash' skills commands agents templates || echo none
+echo '--- CLAUDE.md and ~/.claude references (each needs the Cowork branch nearby)'
+grep -rn 'CLAUDE\.md\|~/\.claude' skills commands agents templates README.md || echo none
+echo '--- subagent assumptions (each needs the no-subagent form stated)'
+grep -rni 'subagent\|sub-agent' skills commands agents README.md || echo none
+```
+
+Three rules to check the hits against:
+
+- A shell command is never the only path to anything. Describe the action first
+  ("fetch this address, with this `User-Agent`"), then give the concrete form per
+  environment.
+- `CLAUDE.md` and `~/.claude` are Claude Code paths. Cowork has neither, so every
+  reference names the Cowork equivalent alongside it: the Memory profile at profile
+  icon > Settings > Capabilities > Memory, and the workspace `desk-profile.md`.
+- Anything that dispatches a subagent states what to do where subagents are not
+  available. `plan-execute-verify` rung 3 is the pattern to match: both forms
+  written out, and which one was used said out loud.
+
 ## Before tagging
 
 - Both validate commands exit 0.
 - The frontmatter sweep prints `clean`.
 - The version check prints `agree`.
 - The style sweep prints `clean`.
+- The portability sweep's hits are each read, and each is branched rather than
+  assuming one environment.
 - Nothing in `templates/`, `docs/`, or the skills refers to a command that no
   longer exists. `grep -rn '/lacuna:' .` should name only the commands present
   in `commands/`.
 - Nothing refers to a plugin file by a bare relative path. Commands run with the
-  user's project as the working directory, so a path into this plugin has to go
+  user's workspace as the working directory, so a path into this plugin has to go
   through `${CLAUDE_PLUGIN_ROOT}`, which Claude Code substitutes in command and
-  skill markdown bodies.
-- A headless load probe from a directory outside this repo comes back clean:
+  skill markdown bodies. That substitution is documented for Claude Code, so no
+  shipped instruction should need a plugin-internal path to do its job: reading
+  `templates/memo.md` is a convenience rather than a dependency.
+- A headless load probe from a directory outside this repo comes back clean. This
+  one is Claude Code only, and there is no equivalent for Cowork, so the Cowork
+  check is manual: sync the marketplace from the repository, install, and confirm
+  the skills and commands appear.
 
   ```bash
   cd /tmp && claude -p "say ok" --plugin-dir <path-to-repo> \

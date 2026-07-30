@@ -1,6 +1,6 @@
 ---
 name: equity-research
-description: Use when asked to research a company, build or refresh a view on a ticker, work out what a business actually earns and what a lawsuit could cost it, size the exposure in a legal matter against the company's own numbers, assess management or competitive position, or sanity-check what a stock is worth. Writes a company research note in markdown for a name the desk is trading around a legal event. Covers the note structure, where each fact comes from, the rule that every claim about a company links to the filing it came from, and how to size a valuation without a spreadsheet or a paid terminal.
+description: Use when asked to research a company, build or refresh a view on a ticker, work out what a business actually earns and what a lawsuit could cost it, size the exposure in a legal matter against the company's own numbers, assess management or competitive position, or sanity-check what a stock is worth. Writes a company research note in markdown for a name the desk is trading around a legal event. Covers the note structure, where each fact comes from, the rule that every claim about a company links to the filing it came from, and how to size a valuation without a spreadsheet or a paid terminal. Every source it draws on is reachable by a web fetch or a bundled connector, so the note can be built in Cowork or in Claude Code.
 ---
 
 <!-- Adapted for lacuna from anthropics/financial-services (Apache-2.0),
@@ -18,7 +18,16 @@ cost, and does the price already reflect it. Everything in the note serves that 
 The full institutional initiation format is a six-week product for a different desk. This
 is a working note that a person reads in ten minutes and can act on.
 
-Output is a markdown file. No spreadsheet, no deck, no chart pack.
+Output is a markdown file. No spreadsheet, no deck, no chart pack. Write it into the working
+folder, one file per name, so it sits beside the desk profile and the rest of the matter's
+material. That works the same way in Cowork and in Claude Code.
+
+**Read the desk profile first.** If `desk-profile.md` is in the working folder, open it and
+follow it: it carries what counts as verified for this analyst, distrusted sources, note length
+and hedging taste, how probabilities get expressed, and pet peeves. In Claude Code the same
+profile sits in a fenced `lacuna desk profile` block in `~/.claude/CLAUDE.md` and loads by
+itself. In Cowork nothing loads it for you, so opening the file is what makes it apply.
+`/lacuna:interview` is what writes it.
 
 ## Where the facts come from
 
@@ -35,7 +44,18 @@ Almost everything you need is free.
 | Who owns it and who turned active | 13D, 13G and their amendments |
 
 The `edgar-research` skill has the endpoints and the fetch recipes. Use it rather than
-guessing URLs.
+guessing URLs. Each recipe there names the URL first and then gives two ways to reach it, a
+fetch-tool form that works anywhere and a terminal form that is Claude Code only, so a note
+can be built in either environment. Nothing in this skill needs a terminal of its own: the
+filings arrive through a fetch and the note is a markdown file you write.
+
+If a filing could not be retrieved, whether the endpoint refused the fetch or the document
+does not exist, the note says which of those two it was and names the document it wanted.
+That is a line in the note rather than a reason to leave the claim unsourced.
+
+Court-record facts come through the `docket-research` skill, which reaches CourtListener as a
+connector. That is available in both environments too, so the note never depends on a
+Claude Code-only path for its legal half.
 
 Company websites, investor presentations and press coverage fill in colour. Label them as
 company-sourced when you use them, because an investor deck is marketing with a compliance
@@ -102,7 +122,7 @@ range in the contingencies note doubles" is a risk. "Litigation risk" is a headi
 **8. Sources.** Every filing cited, with accession numbers and links. This section is the
 receipt for the rest of the note.
 
-## Valuation without a terminal
+## Valuation without a paid data platform
 
 You do not need a five-tab model. You need a defensible number and honesty about its width.
 
@@ -147,5 +167,7 @@ have to withdraw if the reader opened the filing.
 - A number without a source, including numbers that feel like common knowledge.
 - Data behind a paid platform. If the desk does not have a licence for it, the note says
   the figure is unavailable and moves on.
+- A sentence resting on a fetch that was refused. A blocked endpoint gets reported as
+  blocked, with the document it was going to settle.
 - Legal advice, or a prediction dressed as a certainty. The note describes exposure and
   probability, and it never places a trade.
