@@ -1,6 +1,6 @@
 {
   "name": "lacuna",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "description": "A litigation research desk that runs in Claude Cowork and in Claude Code. Curated legal and finance skills, free federal court data through the CourtListener MCP server, keyless SEC EDGAR recipes, and verification practised at a level scaled to the stakes. A ten-minute interview teaches it how you work and writes that into a durable desk profile. Markdown and JSON only: no hooks, no gates, no blocking. It never places a trade.",
   "author": {
     "name": "Lacuna",

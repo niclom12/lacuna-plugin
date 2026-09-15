@@ -7,6 +7,107 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The first line under each version heading is a one-sentence summary. Keep it
 short and keep it plain.
 
+## [0.6.0] - 2026-09-15
+
+A first-time setup that does the work for you: say "set up the desk" after
+installing and it checks the desk is loaded, connects the news desk with the
+code Nic sent you, and tells you what to ask for next. The only thing you type
+is the code.
+
+### Added
+
+- **A `setup` skill.** It is the first thing to run after installing. It
+  confirms the desk is really loaded, hands over to the news connection with
+  your code, covers the restart, and closes with four things you could say
+  next, written out as sentences you could type. Everything it says is plain
+  English, and every reply ends with what was done and what is recommended.
+
+### Changed
+
+- **`/lacuna:news` now answers the "I have no code" case directly**, in one
+  sentence, instead of leaving a new person to work out that a code has to come
+  from somewhere.
+- **`/lacuna:start` points a brand new person at the setup skill** rather than
+  making them read the whole tour first, and tells anyone who asks about share
+  prices that market data is a separate thing with its own code from Nic.
+
+## [0.5.0] - 2026-09-14
+
+The news desk for people who are not technical: one command, `/lacuna:news`,
+connects you or tells you how the desk is doing, and every news skill now talks
+in plain words, ends each answer with what was done and what to do next, and
+knows how to send a company's news to your email or phone.
+
+### Added
+
+- **`/lacuna:news`**, the one door to the news desk. If you are not connected
+  it connects you, using the code Nic sends you. If you are, it says in three
+  lines how many companies the desk is following, whether everything is
+  running, and whether you can add companies, then lists the four things you
+  can say next.
+- **Send a company's news to yourself.** When you start watching a company the
+  desk asks once where the news should go: an email address, a phone number for
+  WhatsApp, both, or just the desk. You can change that later ("send it to my
+  phone") or stop it ("stop sending that to me"). Your email gets everything;
+  your phone gets only stories that matter and are less than two days old,
+  plus the company's own filings, so an old story never buzzes you.
+- **Check a feed more or less often.** "Check that company's feeds every 20
+  minutes" works, between once a minute and once a day. The desk will not go
+  faster than once a minute so the news sites do not block it.
+
+### Changed
+
+- Every news-facing skill and command is written for someone who has never
+  opened a terminal. Nothing technical reaches you: no internal names, no
+  commands, no raw output. If something goes wrong you get one or two plain
+  sentences and are told to ask Nic. Every answer ends with two lines, what
+  was done and what is recommended.
+- `news-connect` says plainly what to do with a cut-off code, a refused code,
+  an existing connection (it asks before replacing), and the restart, and that
+  your companies and settings are safe through all of them. Connecting now
+  also leaves a short note in your Claude Code memory file so that every later
+  session handles news questions the plain way; disconnecting removes it.
+- `news-watch` is complete against the desk: watching a company, asking what
+  the news is, sending news to your email or phone, pausing, resuming,
+  removing, quietening a noisy outlet, ignoring stories about something else
+  with the same name, and changing how often a feed is checked. Every example
+  uses invented companies.
+- `/lacuna:start` mentions the news desk in one short paragraph pointing at
+  `/lacuna:news`. In Cowork it says the news desk needs Claude Code for now.
+- `README.md` has a short section for people who just want to use the news
+  desk, and a separate factual section for the technical reader.
+
+## [0.4.0] - 2026-09-14
+
+The news desk: a person with a connection code from Nic can connect to the Lacuna
+news desk from Claude Code, read the news, and, with write access, add and manage
+the companies it watches.
+
+### Added
+
+- **`news-connect`.** Takes the one-line connection code Nic sends privately,
+  proves the key works, registers the news server for that person at user scope
+  without ever printing the key, and reports in plain words what they can do. It
+  handles a damaged code, a refused key, an unreachable server and an existing
+  connection each with one plain sentence. Claude Code only: Cowork cannot give
+  each person their own key for a custom connector yet, and the skill says so.
+- **`news-watch`.** Ask what the news is, add a company, pause, resume, change or
+  remove a watch, mute an outlet, and change how often a feed is checked. The
+  agent drafts the names, tickers, searches, SEC number and the paragraph on
+  what matters, reads them back as one sentence, and saves only on a yes. Every
+  change ends with what was done and what is recommended. A read-only
+  connection gets a plain explanation that writing needs access from Nic.
+- **`add-monitor`.** Sends news requests to `news-watch`. For a docket, a
+  prediction market, a web page or a state court case it gathers the minimum and
+  drafts a ready-to-send request to Nic, who sets those up.
+
+### Changed
+
+- `/lacuna:start` mentions the news desk when it is connected, and otherwise
+  says in one line how to connect it.
+- The plugin keeps no server address and no key. Both arrive in the person's
+  connection code and live only in their own Claude Code settings.
+
 ## [0.3.0] - 2026-07-30
 
 The dual-target port: the same desk now runs in Claude Cowork and in Claude Code,

@@ -88,6 +88,25 @@ that wrapper may not be loaded. The sweep is unaffected, because the method is i
 the skill rather than in the wrapper. The same request gets the same procedure and
 the same report, read in this conversation instead of in a separate one.
 
+**The news desk.** One short paragraph, in the branch that applies. **In Claude
+Code:** "There is also a news desk, which follows a list of companies in the
+news and can send what matters to your email or phone. Type `/lacuna:news` and
+it will either connect you, using a code Nic sends you, or tell you how it is
+doing and what you can ask for. If you do not have a code yet, ask Nic for 'a
+news desk code'; it is one long line of letters and numbers and it is yours.
+From then on plain questions work: 'what is the news on <company>', 'watch
+<company>'." **In Cowork:** one sentence: "There is
+also a news desk, which needs Claude Code for now." In both, add that asking for
+any other kind of monitor, such as a docket or a prediction market, drafts a
+request to Nic, who sets those up. Market data on share prices is a separate
+system again, with its own code from Nic, so say that in one sentence if they
+ask about prices. Never name a tool or a server here.
+
+If the person says they have only just installed the desk and has not set
+anything up yet, the `setup` skill is the shorter path than this tour: it
+confirms the desk is loaded, connects the news desk with their code, and tells
+them what to say next. Offer it and hand over.
+
 Then say the honest thing about all of it: these are prose files, I read them,
 they work because they are good advice. Nothing in this plugin blocks me or
 checks up on me. If a memo is wrong, the fix is that you say so.

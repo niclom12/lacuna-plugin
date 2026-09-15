@@ -2,7 +2,7 @@
 
 A research desk for litigation-driven trading, delivered as a plugin. It runs in
 **Claude Cowork** and in **Claude Code**, from this one repository, with the same
-skills and the same two commands in both. It is built for someone who is sharp
+skills and the same commands in both. It is built for someone who is sharp
 about markets and courts and new to working with AI.
 
 Everything in it is markdown and JSON. There is no binary to install, no build
@@ -91,7 +91,7 @@ commands afterwards, restart Claude Code.
 
 Most of the desk is identical: the skills load the same way, the CourtListener
 connector is the same server, the memo and chronology files land in the same
-place, and the two commands read the same. Three things genuinely differ, and
+place, and the commands read the same. Three things genuinely differ, and
 every skill that touches them says so in plain language.
 
 **Fetching SEC filings.** In Claude Code there is a terminal, so an EDGAR
@@ -122,7 +122,7 @@ Cowork's plugin documentation lists sub-agents among the things a plugin can
 bundle without documenting the `agents/` folder convention, so treat the wrapper
 as best-effort there and the skill as the reliable path.
 
-## The two commands
+## The commands
 
 **`/lacuna:start`** is a five-minute orientation. What the skills do, how to
 talk to Claude without learning any syntax, how permission and approval prompts
@@ -134,12 +134,83 @@ connect the court data. Run this first.
 second, or whenever your standards change. Re-running it replaces only its own
 fenced section of the profile and leaves everything around it untouched.
 
-After those two, there are no more commands to learn. Ask for what you want in
+**`/lacuna:news`** is the one door to the news desk, described in the next
+two sections. Claude Code only for now.
+
+After those, there are no more commands to learn. Ask for what you want in
 plain language and the skills load themselves when they are relevant.
+
+## The news desk, for people who just want to use it
+
+The news desk follows a list of companies in the news and sends what matters
+to your email or your phone. Four steps, and nothing to install beyond the
+plugin.
+
+1. Install the plugin. In Claude Code, type these two lines, one at a time:
+
+   ```
+   /plugin marketplace add niclom12/lacuna-plugin
+   /plugin install lacuna@lacuna-tools
+   ```
+
+2. Ask Nic for a news desk code. It is one long line of letters and numbers.
+   Keep it private, because it is yours.
+3. Type `/lacuna:news`. It asks for the code, connects you, and tells you to
+   close Claude Code and open it again. Your companies and settings are kept
+   on the desk, so the restart loses nothing.
+4. From then on, say what you want in plain words. Four things people say:
+
+   - "what is the news on <company>"
+   - "watch <company>", and it asks once where the news should go
+   - "send <company> to my phone" or "stop sending <company> to me"
+   - "pause <company>" or "stop watching <company>"
+
+Every answer ends with what was done and what to do next. If something goes
+wrong it says so in a sentence and tells you to ask Nic. New people can read
+the news; adding or changing companies needs a code that allows it, which Nic
+can give you.
+
+## The news desk, for the technical reader
+
+The desk is a private service Nic runs. The plugin holds no address and no
+credential for it. Both arrive inside the person's connection code, a
+`lacuna-news:v1:` prefix followed by a base64url JSON object carrying the
+service address, a personal bearer token, the person's name and the access
+level the token was minted with. The `news-connect` skill decodes it in one
+command, proves the token against the desk's status call, registers the
+service as a user-scope HTTP MCP server named `lacuna-news`, and writes two
+small things beside the person's Claude Code settings: the access level and
+name (never the token) in `lacuna-news.json`, which `/lacuna:news` reads to say
+whether they can add companies, and a fenced section in the global `CLAUDE.md`
+that tells every later session to load the `news-watch` skill before touching
+a news tool. Without that section a session answers news questions straight
+from the tools and none of the plain-words rules apply; the 0.5.0 end-to-end
+test found exactly that. The section is replaced on reconnect and removed on
+disconnect, and nothing outside its markers is touched. The desk itself checks
+the token on every request.
+
+Access is per person. Nic mints one token per person, read-only by default,
+and revokes it by marking it in the desk's token file, which takes effect on
+the next request. Read access covers searching the news, opening a story,
+listing the watches and the desk's health. Write access adds and changes
+watches, pauses and removes them, mutes an outlet, and changes how often a
+feed is checked. A write on a read-only token comes back as a plain refusal,
+which the skill turns into one sentence and a pointer to Nic.
+
+Alerts always go to the desk's own inbox. Each watch can also carry its own
+recipients: email addresses get every alert for that watch; a WhatsApp number
+gets only a story the desk judged to matter that was published within the
+last 48 hours, the company's own filing or wire release, and a roll-up on a
+busy day, so an old story can never page a phone. Feed timing can be set
+between once a minute and once a day per feed.
+
+Cowork cannot yet give each person their own credential for a custom
+connector, so the news desk is Claude Code only for now, and every news skill
+says so when it detects Cowork.
 
 ## What is on the desk
 
-Ten skills. Claude loads one when the work calls for it; you never invoke them
+Fourteen skills. Claude loads one when the work calls for it; you never invoke them
 by name.
 
 Three cover the practice, and apply to everything:
@@ -174,6 +245,26 @@ Three cover the company side:
 - **`equity-research`** writes the company note: what the business earns, what a
   matter could cost it, and what that is worth, with every claim linked to the
   filing it came from.
+
+One covers getting started:
+
+- **`setup`** is the first thing to run after installing. It confirms the desk
+  loaded, connects the news desk with the code Nic sent you, and tells you what
+  to say next. The only thing you type is the code.
+
+Three cover the news desk, a private service Nic runs:
+
+- **`news-connect`** connects you with the news desk code Nic sends you, and
+  handles a cut-off or refused code, an existing connection, and the restart,
+  each in plain words. Claude Code only for now.
+- **`news-watch`** answers what the news is on a watched company and, with the
+  right access, adds, pauses, resumes and removes watches, sends a company's
+  news to an email address or a phone or stops it, quietens a noisy outlet, and
+  changes how often a feed is checked. Everything is read back as one sentence
+  and saved only on a yes.
+- **`add-monitor`** sends news requests to `news-watch` and drafts a request to
+  Nic for any other monitor (a docket, a prediction market, a web page, a state
+  court case), because he sets those up.
 
 `/lacuna:start` lists whatever is actually installed, which is a better source
 than this README.
