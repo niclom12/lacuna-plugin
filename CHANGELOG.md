@@ -7,6 +7,30 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The first line under each version heading is a one-sentence summary. Keep it
 short and keep it plain.
 
+## [0.7.0] - 2026-09-17
+
+One paste and you are connected: a second plugin, `lacuna-desk`, carries both
+of Nic's live services and asks you for your keys as it installs.
+
+### Added
+
+- **A `lacuna-desk` plugin** in the same marketplace. It holds the addresses of
+  the news desk and the alerts archive, and declares two options, a news desk
+  key and an alerts key, which it asks for on install. The keys never touch
+  this repository, so the repository stays public and each person's access
+  stays their own.
+- **The alerts archive**, reachable for the first time from the plugin. It
+  holds every alert the monitors have sent: market odds, docket entries,
+  opinion days, and the health of the monitors themselves.
+
+### Notes
+
+- Installing from a terminal takes one line, which Nic sends: it adds the
+  marketplace, installs both plugins, and passes the keys in one go. In Cowork
+  the same thing is done by hand from Customize then Plugins, pasting each key
+  into the box the plugin asks for.
+- The older `lacuna-news:v1:` code still works and still needs no terminal.
+
 ## [0.6.0] - 2026-09-15
 
 A first-time setup that does the work for you: say "set up the desk" after

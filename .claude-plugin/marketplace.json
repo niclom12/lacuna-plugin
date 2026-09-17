@@ -6,12 +6,16 @@
   },
   "metadata": {
     "description": "Litigation-driven research tooling for Claude Cowork and Claude Code.",
-    "version": "0.6.0"
+    "version": "0.7.0"
   },
   "plugins": [
     {
       "name": "lacuna",
       "source": "./"
+    },
+    {
+      "name": "lacuna-desk",
+      "source": "./desk"
     }
   ]
 }

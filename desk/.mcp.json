@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "lacuna-news": {
+      "type": "http",
+      "url": "https://notifications.atab.ai/news/mcp",
+      "title": "Lacuna news desk",
+      "description": "Companies followed across news outlets and their own filings, with only the stories that matter kept.",
+      "headers": {
+        "Authorization": "Bearer ${user_config.news_token}"
+      }
+    },
+    "lacuna-hub": {
+      "type": "http",
+      "url": "https://notifications.atab.ai/mcp",
+      "title": "Lacuna alerts",
+      "description": "Every alert the Lacuna monitors have sent: market odds, docket entries, opinion days, and monitor health.",
+      "headers": {
+        "Authorization": "Bearer ${user_config.hub_token}"
+      }
+    }
+  }
+}

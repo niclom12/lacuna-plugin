@@ -1,0 +1,29 @@
+{
+  "name": "lacuna-desk",
+  "version": "0.1.0",
+  "description": "Connects you to Nic's live Lacuna services: the news desk, which follows companies across news outlets and their own filings, and the notification hub, which holds every alert the monitors have sent. Both need a personal access key from Nic. Install the lacuna plugin alongside this one for the skills that read them.",
+  "author": {
+    "name": "Lacuna",
+    "url": "https://github.com/niclom12/lacuna-plugin"
+  },
+  "homepage": "https://github.com/niclom12/lacuna-plugin",
+  "repository": "https://github.com/niclom12/lacuna-plugin",
+  "license": "MIT",
+  "keywords": ["litigation", "news", "alerts", "lacuna"],
+  "userConfig": {
+    "news_token": {
+      "type": "string",
+      "title": "News desk key",
+      "description": "The news desk key Nic sent you. Leave blank if he did not send one.",
+      "required": false,
+      "sensitive": true
+    },
+    "hub_token": {
+      "type": "string",
+      "title": "Alerts key",
+      "description": "The alerts key Nic sent you. Leave blank if he did not send one.",
+      "required": false,
+      "sensitive": true
+    }
+  }
+}
