@@ -122,10 +122,18 @@ If it says `write`, or the file is missing, go ahead and draft.
 - A new watch starts being checked within about ten minutes. The first pass
   over each feed is filed quietly, so a new watch never floods anyone with old
   stories.
+- One development sends one email. A ruling written up by nine outlets is one
+  alert; the other eight arrive the next day as a single follow-up naming them.
+  Nothing is thrown away, it is grouped.
+- Every alert is read before it is sent. The desk fetches the article, puts it
+  in front of a model with the recent headlines on that case, and asks whether
+  this is a material development. Nothing goes out that has not been through
+  that, including the company's own filings and wire releases.
 - Email addresses on a watch get every alert the desk gets for it.
 - A WhatsApp number gets far less: only a story judged to matter that was
-  published within the last 48 hours, the company's own filing or wire
-  release, and a short roll-up on a busy day. Old stories never buzz a phone.
+  published within the last 48 hours, and a short roll-up on a busy day. Old
+  stories never buzz a phone. A WhatsApp group can be a recipient too, written
+  as its group id, `120363428272332737@g.us`.
 - Feeds are checked on the desk's own schedule. A person can change one feed's
   timing between once a minute and once a day; the desk will not go faster
   than once a minute so the news sites do not block it.
@@ -200,8 +208,9 @@ news", "start tracking news on Quillfeather Paper".
   or three, each pairing a name with what matters: `"Northwind Kettle" plant`,
   `"Northwind Kettle" (lawsuit OR recall OR ruling)`. Keep them narrow; a
   search on the bare name returns the whole business press.
-- **CIKs**: the SEC's number for the company, digits only. With it the
-  company's own filings arrive the moment they post. Look it up in the SEC's
+- **CIKs**: the SEC's number for the company, digits only. With it the desk
+  picks up the company's own filings within a minute of them posting, and they
+  are then read and judged like any other story before anything is sent. Look it up in the SEC's
   ticker file, `https://www.sec.gov/files/company_tickers.json`, following the
   `edgar-research` skill for the contact address the SEC requires on the
   request. A private or non-US company has none; that is fine.
@@ -277,7 +286,7 @@ the Harbourlight alerts", "stop texting me about Quillfeather".
 
 > Northwind Kettle news will go to the desk, to jo@example.com, and to your
 > phone on +14155550123. Your phone only gets the stories that matter and are
-> fresh, plus the company's own filings; the email gets everything. Save it?
+> fresh; the email gets everything. Save it?
 
 For stopping:
 
@@ -409,9 +418,10 @@ Call `news_status` before guessing. Plain readings:
   at the moment, which the desk handles on its own".
 - A feed listed as muted is quiet on purpose.
 - A large queue of unjudged stories with both relevance providers unavailable
-  means stories are arriving but not being sorted for importance. Filings
-  still come through, because they skip that step. Say exactly that, and that
-  Nic will know about it.
+  means no alert is going out at all. Every alert now waits to be read and
+  judged, filings included, so there is nothing that skips the queue. Nothing
+  is lost: the stories wait and go out once a provider answers. Say exactly
+  that, and that Nic will know about it.
 - If the collector has not reported in for a long while, say "the desk has not
   checked in recently" and tell the person to let Nic know.
 
