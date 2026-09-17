@@ -23,6 +23,11 @@ of Nic's live services and asks you for your keys as it installs.
   holds every alert the monitors have sent: market odds, docket entries,
   opinion days, and the health of the monitors themselves.
 
+- **An `alerts` skill.** It reads the alerts archive in plain words: what
+  happened overnight, what is going on with a situation, how noisy something
+  has been, what one alert meant, and whether the monitors are still running.
+  It is read only, and it says so when asked to change anything.
+
 ### Notes
 
 - Installing from a terminal takes one line, which Nic sends: it adds the
