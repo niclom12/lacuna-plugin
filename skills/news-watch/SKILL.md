@@ -1,6 +1,6 @@
 ---
 name: news-watch
-description: "Use when the person asks what the news is on a company, which companies the news desk is watching, or whether the news desk is running; wants to start, change, pause, resume or stop watching a company; wants a company's news sent to their email or phone, or stopped; says the news is noisy, about the wrong company, or that one outlet should be quietened or checked more or less often. Works through the Lacuna news desk connection. Drafts everything itself, reads it back as one plain sentence, and saves only on a yes. Needs the news desk connected (the news-connect skill), which works in Claude Code."
+description: "Use when the person asks what the news is on a company, which companies the news desk is watching, or whether the news desk is running; wants to start, change, pause, resume or stop watching a company or a court docket; wants a company's news sent to their email or phone, or stopped; says the news is noisy, about the wrong company, or that one outlet should be quietened or checked more or less often. Works through the Lacuna news desk connection. Drafts everything itself, reads it back as one plain sentence, and saves only on a yes. Needs the news desk connected (the news-connect skill), which works in Claude Code."
 ---
 
 <!-- Original to lacuna. Ported from the desk's private news-watch skill, which
@@ -86,6 +86,17 @@ Writing, which needs write access:
 - `mcp__lacuna-news__mute_source`
 - `mcp__lacuna-news__unmute_source`
 - `mcp__lacuna-news__set_source_interval`
+
+Court docket watches, on the same connection:
+
+- `mcp__lacuna-news__list_courts` lists the courts a docket watch can use.
+  Reading.
+- `mcp__lacuna-news__list_docket_watches` lists every docket watch, with its
+  `id`, docket number, case, who its alerts go to, and whether it is paused.
+  Reading.
+- `mcp__lacuna-news__add_docket_watch`, `mcp__lacuna-news__update_docket_watch`,
+  `mcp__lacuna-news__pause_docket_watch`, `mcp__lacuna-news__resume_docket_watch`
+  and `mcp__lacuna-news__remove_docket_watch` change them. Writing.
 
 ### Read-only connections
 
@@ -322,6 +333,44 @@ Then the two lines:
 
 > Done: Harbourlight Ferries is paused; its settings and stories are kept.
 > Recommended: say "resume Harbourlight" when it matters again.
+
+## Watching a court docket
+
+A docket watch emails every new filing on one court case. It runs on the desk's
+court monitor, not the news feeds, and the same connection changes it.
+
+**What you do.**
+
+1. Call `list_courts`. A district court in `rss_feeds` is read from the court's
+   own feed. `scotus` is the Supreme Court. Any other court goes through
+   CourtListener under its court id: `ca9` is the Ninth Circuit, `ca2` the
+   Second, `cadc` the D.C. Circuit, `nysd` the Southern District of New York.
+2. Ask who should get the alerts, if they did not say. Left out, they go to the
+   desk's usual list.
+3. Read it back as one sentence and wait for a yes.
+4. Call `add_docket_watch` with `court`, `case_number`, and `alert_to` and `case`
+   when known. CourtListener finds the docket from the court and number. If it
+   finds none or several, say what it found and ask; never guess a docket id.
+5. Leave `name_regex` out unless they ask for it. A loose name pattern alerts on
+   other cases that share a party's name.
+
+**What you say.**
+
+> I'll watch the Ninth Circuit docket 25-8059, EDC v. PHMSA, and email new
+> filings to you. Go ahead?
+
+Then the two lines:
+
+> Done: 25-8059 is watched from now on; what is already on the docket is not
+> emailed, only new filings.
+> Recommended: say "show my docket watches" to see them all.
+
+**Changing, pausing and removing.** Call `list_docket_watches` for the `id`
+first. `update_docket_watch` changes the label, the case, the recipients or a
+pattern; an empty `alert_to` list goes back to the usual list.
+`pause_docket_watch` keeps it and stops the alerts; `resume_docket_watch` starts
+it again. `remove_docket_watch` deletes it for good, so say that and wait for a
+yes. Every change is live within a minute, and the desk is told who changed what.
 
 ## Changing what is watched
 

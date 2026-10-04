@@ -7,6 +7,19 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The first line under each version heading is a one-sentence summary. Keep it
 short and keep it plain.
 
+## [0.8.0] - 2026-10-04
+
+Court dockets can now be watched, changed, paused and removed from the same
+news desk connection.
+
+### Added
+
+- **Docket watches in the `news-watch` skill.** `list_courts`,
+  `list_docket_watches`, `add_docket_watch`, `update_docket_watch`,
+  `pause_docket_watch`, `resume_docket_watch` and `remove_docket_watch`. A watch
+  emails every new filing on one case, to the addresses you give or the desk's
+  usual list. The same key works; a read-only key can list but not change.
+
 ## [0.7.0] - 2026-09-17
 
 One paste and you are connected: a second plugin, `lacuna-desk`, carries both
