@@ -262,9 +262,9 @@ Three cover the news desk, a private service Nic runs:
   news to an email address or a phone or stops it, quietens a noisy outlet, and
   changes how often a feed is checked. Everything is read back as one sentence
   and saved only on a yes.
-- **`add-monitor`** sends news requests to `news-watch` and drafts a request to
-  Nic for any other monitor (a docket, a prediction market, a web page, a state
-  court case), because he sets those up.
+- **`add-monitor`** sends news and court docket requests to `news-watch`, where
+  the person sets them up, and drafts a request to Nic for any other monitor (a
+  prediction market, a web page, a state court case), because he sets those up.
 
 `/lacuna:start` lists whatever is actually installed, which is a better source
 than this README.

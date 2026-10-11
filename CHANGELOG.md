@@ -7,7 +7,7 @@ project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The first line under each version heading is a one-sentence summary. Keep it
 short and keep it plain.
 
-## [0.8.0] - 2026-10-04
+## [0.8.0] - 2026-10-11
 
 Court dockets can now be watched, changed, paused and removed from the same
 news desk connection.
@@ -19,6 +19,13 @@ news desk connection.
   `pause_docket_watch`, `resume_docket_watch` and `remove_docket_watch`. A watch
   emails every new filing on one case, to the addresses you give or the desk's
   usual list. The same key works; a read-only key can list but not change.
+
+### Changed
+
+- **`add-monitor` sends court dockets to `news-watch`.** A federal docket is
+  now something the person adds themselves, so the skill no longer drafts a
+  request to Nic for one. Markets, web pages and state court cases still go
+  to Nic as a ready-to-send request.
 
 ## [0.7.0] - 2026-09-17
 

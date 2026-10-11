@@ -95,9 +95,10 @@ it will either connect you, using a code Nic sends you, or tell you how it is
 doing and what you can ask for. If you do not have a code yet, ask Nic for 'a
 news desk code'; it is one long line of letters and numbers and it is yours.
 From then on plain questions work: 'what is the news on <company>', 'watch
-<company>'." **In Cowork:** one sentence: "There is
-also a news desk, which needs Claude Code for now." In both, add that asking for
-any other kind of monitor, such as a docket or a prediction market, drafts a
+<company>', 'watch the docket 25-8059 in the Ninth Circuit'." **In Cowork:** one
+sentence: "There is also a news desk, which needs Claude Code for now." In both,
+add that the same news desk code also watches federal court dockets, and that
+asking for any other kind of monitor, such as a prediction market, drafts a
 request to Nic, who sets those up. Market data on share prices is a separate
 system again, with its own code from Nic, so say that in one sentence if they
 ask about prices. Never name a tool or a server here.
