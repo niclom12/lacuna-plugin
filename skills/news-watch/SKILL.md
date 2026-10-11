@@ -144,7 +144,7 @@ If it says `write`, or the file is missing, go ahead and draft.
 - A WhatsApp number gets far less: only a story judged to matter that was
   published within the last 48 hours, and a short roll-up on a busy day. Old
   stories never buzz a phone. A WhatsApp group can be a recipient too, written
-  as its group id, `120363428272332737@g.us`.
+  as its group id, `120363000000000000@g.us`.
 - Feeds are checked on the desk's own schedule. A person can change one feed's
   timing between once a minute and once a day; the desk will not go faster
   than once a minute so the news sites do not block it.
